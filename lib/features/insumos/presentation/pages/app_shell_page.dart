@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/injection_container.dart';
+import '../../../receitas/presentation/cubit/receitas_cubit.dart';
+import '../../../receitas/presentation/pages/receitas_page.dart';
 import '../widgets/app_bottom_nav.dart';
 import 'insumos_page.dart';
 
@@ -16,7 +20,10 @@ class _AppShellPageState extends State<AppShellPage> {
   late final List<Widget> _pages = [
     const _PlaceholderPage(title: 'Home'),
     const InsumosPage(),
-    const _PlaceholderPage(title: 'Receitas'),
+    BlocProvider(
+      create: (_) => sl<ReceitasCubit>(),
+      child: const ReceitasPage(),
+    ),
     const _PlaceholderPage(title: 'Custos'),
     const _PlaceholderPage(title: 'Vendas'),
     const _PlaceholderPage(title: 'Estoque'),
