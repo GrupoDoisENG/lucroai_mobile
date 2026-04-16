@@ -15,8 +15,6 @@ class InsumosPage extends StatefulWidget {
 
 class _InsumosPageState extends State<InsumosPage> {
   final _searchCtrl = TextEditingController();
-  bool? _filterAtivo;
-  InsumoCategoria? _filterCategoria;
 
   @override
   void initState() {
@@ -55,9 +53,14 @@ class _InsumosPageState extends State<InsumosPage> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Excluir Insumo'),
-        content: Text('Deseja excluir "${insumo.nome}"? Esta ação não pode ser desfeita.'),
+        content: Text(
+          'Deseja excluir "${insumo.nome}"? Esta ação não pode ser desfeita.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
@@ -76,17 +79,7 @@ class _InsumosPageState extends State<InsumosPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Insumos'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            tooltip: 'Filtros',
-            onPressed: () => _showFilterSheet(context),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Insumos'), centerTitle: true),
       body: Column(
         children: [
           Padding(
@@ -105,21 +98,10 @@ class _InsumosPageState extends State<InsumosPage> {
                     },
                   ),
               ],
-              onChanged: (value) => context.read<InsumosCubit>().searchInsumos(value),
+              onChanged: (value) =>
+                  context.read<InsumosCubit>().searchInsumos(value),
             ),
           ),
-          if (_filterAtivo != null || _filterCategoria != null)
-            _ActiveFiltersBar(
-              filterAtivo: _filterAtivo,
-              filterCategoria: _filterCategoria,
-              onClear: () {
-                setState(() {
-                  _filterAtivo = null;
-                  _filterCategoria = null;
-                });
-                context.read<InsumosCubit>().applyFilter();
-              },
-            ),
           Expanded(
             child: BlocConsumer<InsumosCubit, InsumosState>(
               listener: (context, state) {
@@ -131,10 +113,12 @@ class _InsumosPageState extends State<InsumosPage> {
                 if (state is InsumoActionError) {
                   ScaffoldMessenger.of(context)
                     ..hideCurrentSnackBar()
-                    ..showSnackBar(SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                    ));
+                    ..showSnackBar(
+                      SnackBar(
+                        content: Text(state.message),
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                    );
                 }
               },
               builder: (context, state) {
@@ -159,7 +143,8 @@ class _InsumosPageState extends State<InsumosPage> {
                 return Stack(
                   children: [
                     RefreshIndicator(
-                      onRefresh: () => context.read<InsumosCubit>().loadInsumos(),
+                      onRefresh: () =>
+                          context.read<InsumosCubit>().loadInsumos(),
                       child: ListView.builder(
                         padding: const EdgeInsets.only(top: 8, bottom: 88),
                         itemCount: insumos.length,
@@ -168,8 +153,6 @@ class _InsumosPageState extends State<InsumosPage> {
                           return InsumoCard(
                             insumo: insumo,
                             onTap: () => _openForm(insumo: insumo),
-                            onToggleAtivo: () =>
-                                context.read<InsumosCubit>().toggleInsumoAtivo(insumo),
                             onDelete: () => _confirmDelete(insumo),
                           );
                         },
@@ -197,6 +180,7 @@ class _InsumosPageState extends State<InsumosPage> {
     );
   }
 
+  /*
   void _showFilterSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -217,8 +201,10 @@ class _InsumosPageState extends State<InsumosPage> {
       ),
     );
   }
+  */
 }
 
+/*
 class _ActiveFiltersBar extends StatelessWidget {
   final bool? filterAtivo;
   final InsumoCategoria? filterCategoria;
@@ -258,7 +244,9 @@ class _ActiveFiltersBar extends StatelessWidget {
     );
   }
 }
+*/
 
+/*
 class _FilterSheet extends StatefulWidget {
   final bool? filterAtivo;
   final InsumoCategoria? filterCategoria;
@@ -350,6 +338,7 @@ class _FilterSheetState extends State<_FilterSheet> {
     );
   }
 }
+*/
 
 class _EmptyView extends StatelessWidget {
   final VoidCallback onAdd;
@@ -365,7 +354,9 @@ class _EmptyView extends StatelessWidget {
           Icon(
             Icons.inventory_2_outlined,
             size: 80,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(100),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant.withAlpha(100),
           ),
           const SizedBox(height: 16),
           Text(

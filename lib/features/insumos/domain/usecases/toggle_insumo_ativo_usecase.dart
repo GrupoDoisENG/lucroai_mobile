@@ -1,10 +1,7 @@
-import '../entities/insumo.dart';
-import '../repositories/insumo_repository.dart';
-
 class ToggleInsumoAtivoUsecase {
-  final InsumoRepository repository;
-  ToggleInsumoAtivoUsecase(this.repository);
+  const ToggleInsumoAtivoUsecase();
 
-  Future<Insumo> call(String id, bool ativo) =>
-      repository.updateInsumo(id: id, ativo: ativo);
+  Never call() => throw UnsupportedError(
+    'O backend atual nao possui alternancia de status do insumo.',
+  );
 }

@@ -4,7 +4,6 @@ import '../../domain/usecases/create_insumo_usecase.dart';
 import '../../domain/usecases/delete_insumo_usecase.dart';
 import '../../domain/usecases/get_insumo_usecase.dart';
 import '../../domain/usecases/get_insumos_usecase.dart';
-import '../../domain/usecases/toggle_insumo_ativo_usecase.dart';
 import '../../domain/usecases/update_insumo_usecase.dart';
 import 'insumos_state.dart';
 
@@ -14,11 +13,8 @@ class InsumosCubit extends Cubit<InsumosState> {
   final CreateInsumoUsecase createInsumo;
   final UpdateInsumoUsecase updateInsumo;
   final DeleteInsumoUsecase deleteInsumo;
-  final ToggleInsumoAtivoUsecase toggleAtivo;
 
-  List<Insumo> _currentInsumos = [];
-  bool? _filterAtivo;
-  InsumoCategoria? _filterCategoria;
+  List<Insumo> _allInsumos = [];
   String? _search;
 
   InsumosCubit({
@@ -27,108 +23,78 @@ class InsumosCubit extends Cubit<InsumosState> {
     required this.createInsumo,
     required this.updateInsumo,
     required this.deleteInsumo,
-    required this.toggleAtivo,
   }) : super(const InsumosInitial());
 
-  Future<void> loadInsumos({
-    bool? ativo,
-    InsumoCategoria? categoria,
-    String? search,
-    bool resetFilters = false,
-  }) async {
-    if (resetFilters) {
-      _filterAtivo = null;
-      _filterCategoria = null;
-      _search = null;
-    } else {
-      if (ativo != _filterAtivo || categoria != _filterCategoria) {
-        _filterAtivo = ativo;
-        _filterCategoria = categoria;
-      }
-      if (search != null) _search = search;
-    }
-
+  Future<void> loadInsumos() async {
     emit(const InsumosLoading());
     try {
-      final result = await getInsumos(
-        ativo: _filterAtivo,
-        categoria: _filterCategoria,
-        search: _search,
-      );
-      _currentInsumos = result;
-      emit(InsumosLoaded(
-        insumos: result,
-        filterAtivo: _filterAtivo,
-        filterCategoria: _filterCategoria,
-        search: _search,
-      ));
+      _allInsumos = await getInsumos();
+      emit(InsumosLoaded(insumos: _applySearch(_allInsumos), search: _search));
     } catch (e) {
       emit(InsumosError(e.toString()));
     }
   }
 
-  Future<void> applyFilter({bool? ativo, InsumoCategoria? categoria}) async {
-    _filterAtivo = ativo;
-    _filterCategoria = categoria;
-    await loadInsumos();
-  }
-
-  Future<void> searchInsumos(String search) async {
+  void searchInsumos(String search) {
     _search = search.isEmpty ? null : search;
-    await loadInsumos();
+    emit(InsumosLoaded(insumos: _applySearch(_allInsumos), search: _search));
   }
 
   Future<bool> saveInsumo({
-    String? id,
+    int? id,
     required String nome,
-    String? descricao,
-    required InsumoCategoria categoria,
-    required InsumoUnidadeMedida unidadeMedida,
-    required double precoUnitario,
-    required double estoqueMinimo,
-    bool ativo = true,
+    required double quantidade,
+    required InsumoUnidadeMedida unidade,
+    required double valorPago,
+    double? quantidadeDisponivel,
+    double? quantidadeMinima,
   }) async {
-    emit(InsumoActionLoading(_currentInsumos));
+    emit(InsumoActionLoading(_applySearch(_allInsumos)));
     try {
       if (id == null) {
         await createInsumo(
           nome: nome,
-          descricao: descricao,
-          categoria: categoria,
-          unidadeMedida: unidadeMedida,
-          precoUnitario: precoUnitario,
-          estoqueMinimo: estoqueMinimo,
+          quantidade: quantidade,
+          unidade: unidade,
+          valorPago: valorPago,
+          quantidadeDisponivel: quantidadeDisponivel,
+          quantidadeMinima: quantidadeMinima,
         );
       } else {
         await updateInsumo(
           id: id,
           nome: nome,
-          descricao: descricao,
-          categoria: categoria,
-          unidadeMedida: unidadeMedida,
-          precoUnitario: precoUnitario,
-          estoqueMinimo: estoqueMinimo,
-          ativo: ativo,
+          quantidade: quantidade,
+          unidade: unidade,
+          valorPago: valorPago,
+          quantidadeDisponivel: quantidadeDisponivel,
+          quantidadeMinima: quantidadeMinima,
         );
       }
 
-      final result = await getInsumos(
-        ativo: _filterAtivo,
-        categoria: _filterCategoria,
-        search: _search,
+      _allInsumos = await getInsumos();
+      final visibleInsumos = _applySearch(_allInsumos);
+      emit(
+        InsumoActionSuccess(
+          insumos: visibleInsumos,
+          message: id == null
+              ? 'Insumo criado com sucesso!'
+              : 'Insumo atualizado com sucesso!',
+        ),
       );
-      _currentInsumos = result;
-      emit(InsumoActionSuccess(
-        insumos: result,
-        message: id == null ? 'Insumo criado com sucesso!' : 'Insumo atualizado com sucesso!',
-      ));
       return true;
     } catch (e) {
-      emit(InsumoActionError(insumos: _currentInsumos, message: e.toString()));
+      emit(
+        InsumoActionError(
+          insumos: _applySearch(_allInsumos),
+          message: e.toString(),
+        ),
+      );
       return false;
     }
   }
 
+  /*
   Future<void> toggleInsumoAtivo(Insumo insumo) async {
     emit(InsumoActionLoading(_currentInsumos));
     try {
@@ -166,5 +132,36 @@ class InsumosCubit extends Cubit<InsumosState> {
     } catch (e) {
       emit(InsumoActionError(insumos: _currentInsumos, message: e.toString()));
     }
+  }
+  */
+
+  Future<void> removeInsumo(int id) async {
+    emit(InsumoActionLoading(_applySearch(_allInsumos)));
+    try {
+      await deleteInsumo(id);
+      _allInsumos = await getInsumos();
+      emit(
+        InsumoActionSuccess(
+          insumos: _applySearch(_allInsumos),
+          message: 'Insumo excluido com sucesso!',
+        ),
+      );
+    } catch (e) {
+      emit(
+        InsumoActionError(
+          insumos: _applySearch(_allInsumos),
+          message: e.toString(),
+        ),
+      );
+    }
+  }
+
+  List<Insumo> _applySearch(List<Insumo> insumos) {
+    final search = _search?.toLowerCase();
+    if (search == null || search.isEmpty) return insumos;
+
+    return insumos
+        .where((insumo) => insumo.nome.toLowerCase().contains(search))
+        .toList();
   }
 }

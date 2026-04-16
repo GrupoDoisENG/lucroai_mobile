@@ -1,33 +1,28 @@
 import '../entities/insumo.dart';
 
 abstract class InsumoRepository {
-  Future<List<Insumo>> getInsumos({
-    bool? ativo,
-    InsumoCategoria? categoria,
-    String? search,
-  });
+  Future<List<Insumo>> getInsumos();
 
-  Future<Insumo> getInsumo(String id);
+  Future<Insumo> getInsumo(int id);
 
   Future<Insumo> createInsumo({
     required String nome,
-    String? descricao,
-    required InsumoCategoria categoria,
-    required InsumoUnidadeMedida unidadeMedida,
-    required double precoUnitario,
-    required double estoqueMinimo,
+    required double quantidade,
+    required InsumoUnidadeMedida unidade,
+    required double valorPago,
+    double? quantidadeDisponivel,
+    double? quantidadeMinima,
   });
 
   Future<Insumo> updateInsumo({
-    required String id,
+    required int id,
     String? nome,
-    String? descricao,
-    InsumoCategoria? categoria,
-    InsumoUnidadeMedida? unidadeMedida,
-    double? precoUnitario,
-    double? estoqueMinimo,
-    bool? ativo,
+    double? quantidade,
+    InsumoUnidadeMedida? unidade,
+    double? valorPago,
+    double? quantidadeDisponivel,
+    double? quantidadeMinima,
   });
 
-  Future<void> deleteInsumo(String id);
+  Future<void> deleteInsumo(int id);
 }

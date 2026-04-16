@@ -4,5 +4,5 @@ class DeleteInsumoUsecase {
   final InsumoRepository repository;
   DeleteInsumoUsecase(this.repository);
 
-  Future<void> call(String id) => repository.deleteInsumo(id);
+  Future<void> call(int id) => repository.deleteInsumo(id);
 }

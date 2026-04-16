@@ -18,19 +18,12 @@ class InsumosLoading extends InsumosState {
 
 class InsumosLoaded extends InsumosState {
   final List<Insumo> insumos;
-  final bool? filterAtivo;
-  final InsumoCategoria? filterCategoria;
   final String? search;
 
-  const InsumosLoaded({
-    required this.insumos,
-    this.filterAtivo,
-    this.filterCategoria,
-    this.search,
-  });
+  const InsumosLoaded({required this.insumos, this.search});
 
   @override
-  List<Object?> get props => [insumos, filterAtivo, filterCategoria, search];
+  List<Object?> get props => [insumos, search];
 }
 
 class InsumosError extends InsumosState {

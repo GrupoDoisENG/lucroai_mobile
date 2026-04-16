@@ -1,3 +1,4 @@
+/*
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/insumo.dart';
@@ -203,6 +204,259 @@ class _InsumoFormPageState extends State<InsumoFormPage> {
                           onPressed: isLoading ? null : _submit,
                           icon: const Icon(Icons.save_outlined),
                           label: Text(_isEditing ? 'Salvar Alterações' : 'Criar Insumo'),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(52),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+                  ),
+                ),
+                if (isLoading)
+                  const Positioned.fill(
+                    child: ColoredBox(
+                      color: Color(0x44000000),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+*/
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/insumo.dart';
+import '../cubit/insumos_cubit.dart';
+import '../cubit/insumos_state.dart';
+
+class InsumoFormPage extends StatefulWidget {
+  final Insumo? insumo;
+
+  const InsumoFormPage({super.key, this.insumo});
+
+  @override
+  State<InsumoFormPage> createState() => _InsumoFormPageState();
+}
+
+class _InsumoFormPageState extends State<InsumoFormPage> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nomeCtrl;
+  late final TextEditingController _quantidadeCtrl;
+  late final TextEditingController _valorPagoCtrl;
+  late final TextEditingController _quantidadeDisponivelCtrl;
+  late final TextEditingController _quantidadeMinimaCtrl;
+
+  InsumoUnidadeMedida _unidade = InsumoUnidadeMedida.kg;
+
+  bool get _isEditing => widget.insumo != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final insumo = widget.insumo;
+    _nomeCtrl = TextEditingController(text: insumo?.nome ?? '');
+    _quantidadeCtrl = TextEditingController(
+      text: insumo != null ? insumo.quantidade.toStringAsFixed(4) : '',
+    );
+    _valorPagoCtrl = TextEditingController(
+      text: insumo != null ? insumo.valorPago.toStringAsFixed(2) : '',
+    );
+    _quantidadeDisponivelCtrl = TextEditingController(
+      text: insumo != null
+          ? insumo.quantidadeDisponivel.toStringAsFixed(4)
+          : '',
+    );
+    _quantidadeMinimaCtrl = TextEditingController(
+      text: insumo != null ? insumo.quantidadeMinima.toStringAsFixed(4) : '',
+    );
+    _unidade = insumo?.unidade ?? InsumoUnidadeMedida.kg;
+  }
+
+  @override
+  void dispose() {
+    _nomeCtrl.dispose();
+    _quantidadeCtrl.dispose();
+    _valorPagoCtrl.dispose();
+    _quantidadeDisponivelCtrl.dispose();
+    _quantidadeMinimaCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final success = await context.read<InsumosCubit>().saveInsumo(
+      id: widget.insumo?.id,
+      nome: _nomeCtrl.text.trim(),
+      quantidade: _parseDecimal(_quantidadeCtrl.text),
+      unidade: _unidade,
+      valorPago: _parseDecimal(_valorPagoCtrl.text),
+      quantidadeDisponivel: _optionalDecimal(_quantidadeDisponivelCtrl.text),
+      quantidadeMinima: _optionalDecimal(_quantidadeMinimaCtrl.text),
+    );
+
+    if (success && mounted) Navigator.pop(context);
+  }
+
+  double _parseDecimal(String value) =>
+      double.parse(value.replaceAll(',', '.'));
+
+  double? _optionalDecimal(String value) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) return null;
+    return _parseDecimal(normalized);
+  }
+
+  String? _requiredPositive(String? value, String label) {
+    if (value == null || value.trim().isEmpty) return '$label e obrigatorio';
+    final number = double.tryParse(value.replaceAll(',', '.'));
+    if (number == null || number <= 0) return 'Informe um valor maior que zero';
+    return null;
+  }
+
+  String? _optionalNonNegative(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final number = double.tryParse(value.replaceAll(',', '.'));
+    if (number == null || number < 0) return 'Informe um valor valido';
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_isEditing ? 'Editar Insumo' : 'Novo Insumo'),
+        centerTitle: true,
+      ),
+      body: BlocListener<InsumosCubit, InsumosState>(
+        listener: (context, state) {
+          if (state is InsumoActionError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+        },
+        child: BlocBuilder<InsumosCubit, InsumosState>(
+          builder: (context, state) {
+            final isLoading = state is InsumoActionLoading;
+
+            return Stack(
+              children: [
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextFormField(
+                          controller: _nomeCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Nome *',
+                            prefixIcon: Icon(Icons.inventory_2_outlined),
+                            border: OutlineInputBorder(),
+                          ),
+                          textCapitalization: TextCapitalization.words,
+                          validator: (value) =>
+                              value == null || value.trim().isEmpty
+                              ? 'Nome e obrigatorio'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<InsumoUnidadeMedida>(
+                          initialValue: _unidade,
+                          decoration: const InputDecoration(
+                            labelText: 'Unidade *',
+                            prefixIcon: Icon(Icons.straighten_outlined),
+                            border: OutlineInputBorder(),
+                          ),
+                          items: InsumoUnidadeMedida.values
+                              .map(
+                                (u) => DropdownMenuItem(
+                                  value: u,
+                                  child: Text(u.label),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) =>
+                              setState(() => _unidade = value!),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _quantidadeCtrl,
+                          decoration: InputDecoration(
+                            labelText: 'Quantidade comprada *',
+                            prefixIcon: const Icon(Icons.scale_outlined),
+                            suffixText: _unidade.label,
+                            border: const OutlineInputBorder(),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          validator: (value) =>
+                              _requiredPositive(value, 'Quantidade'),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _valorPagoCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Valor pago (R\$) *',
+                            prefixIcon: Icon(Icons.attach_money),
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          validator: (value) =>
+                              _requiredPositive(value, 'Valor pago'),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _quantidadeDisponivelCtrl,
+                          decoration: InputDecoration(
+                            labelText: 'Quantidade disponivel',
+                            prefixIcon: const Icon(Icons.warehouse_outlined),
+                            suffixText: _unidade.label,
+                            border: const OutlineInputBorder(),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          validator: _optionalNonNegative,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _quantidadeMinimaCtrl,
+                          decoration: InputDecoration(
+                            labelText: 'Quantidade minima',
+                            prefixIcon: const Icon(
+                              Icons.notification_important_outlined,
+                            ),
+                            suffixText: _unidade.label,
+                            border: const OutlineInputBorder(),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          validator: _optionalNonNegative,
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: isLoading ? null : _submit,
+                          icon: const Icon(Icons.save_outlined),
+                          label: Text(
+                            _isEditing ? 'Salvar Alteracoes' : 'Criar Insumo',
+                          ),
                           style: FilledButton.styleFrom(
                             minimumSize: const Size.fromHeight(52),
                           ),

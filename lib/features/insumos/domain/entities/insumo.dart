@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
-enum InsumoCategoria {
+/*
+enum _DeprecatedInsumoCategoria {
   materiaPrima('materia_prima', 'Matéria-Prima'),
   embalagem('embalagem', 'Embalagem'),
   ingrediente('ingrediente', 'Ingrediente'),
@@ -16,7 +17,7 @@ enum InsumoCategoria {
       InsumoCategoria.values.firstWhere((e) => e.value == value);
 }
 
-enum InsumoUnidadeMedida {
+enum _DeprecatedInsumoUnidadeMedida {
   kg('kg', 'kg'),
   g('g', 'g'),
   mg('mg', 'mg'),
@@ -30,25 +31,25 @@ enum InsumoUnidadeMedida {
 
   final String value;
   final String label;
-  const InsumoUnidadeMedida(this.value, this.label);
+  const _DeprecatedInsumoUnidadeMedida(this.value, this.label);
 
-  static InsumoUnidadeMedida fromValue(String value) =>
-      InsumoUnidadeMedida.values.firstWhere((e) => e.value == value);
+  static _DeprecatedInsumoUnidadeMedida fromValue(String value) =>
+      _DeprecatedInsumoUnidadeMedida.values.firstWhere((e) => e.value == value);
 }
 
-class Insumo extends Equatable {
+class _DeprecatedInsumo extends Equatable {
   final String id;
   final String nome;
   final String? descricao;
-  final InsumoCategoria categoria;
-  final InsumoUnidadeMedida unidadeMedida;
+  final _DeprecatedInsumoCategoria categoria;
+  final _DeprecatedInsumoUnidadeMedida unidadeMedida;
   final double precoUnitario;
   final double estoqueMinimo;
   final bool ativo;
   final DateTime criadoEm;
   final DateTime atualizadoEm;
 
-  const Insumo({
+  const _DeprecatedInsumo({
     required this.id,
     required this.nome,
     this.descricao,
@@ -73,5 +74,61 @@ class Insumo extends Equatable {
     ativo,
     criadoEm,
     atualizadoEm,
+  ];
+}
+
+*/
+enum InsumoUnidadeMedida {
+  g('G', 'g'),
+  kg('KG', 'kg'),
+  ml('ML', 'mL'),
+  l('L', 'L'),
+  un('UN', 'un');
+
+  final String value;
+  final String label;
+  const InsumoUnidadeMedida(this.value, this.label);
+
+  static InsumoUnidadeMedida fromValue(String value) =>
+      InsumoUnidadeMedida.values.firstWhere((e) => e.value == value);
+}
+
+class Insumo extends Equatable {
+  final int id;
+  final int empresaId;
+  final String nome;
+  final double quantidade;
+  final InsumoUnidadeMedida unidade;
+  final double valorPago;
+  final double custoUnitario;
+  final double quantidadeDisponivel;
+  final double quantidadeMinima;
+  final DateTime dataCriacao;
+
+  const Insumo({
+    required this.id,
+    required this.empresaId,
+    required this.nome,
+    required this.quantidade,
+    required this.unidade,
+    required this.valorPago,
+    required this.custoUnitario,
+    required this.quantidadeDisponivel,
+    required this.quantidadeMinima,
+    required this.dataCriacao,
+  });
+
+  @override
+  List<Object?> get props => [
+    id,
+    empresaId,
+    nome,
+    quantidade,
+    unidade,
+    valorPago,
+    custoUnitario,
+    quantidadeDisponivel,
+    quantidadeMinima,
+    dataCriacao,
   ];
 }

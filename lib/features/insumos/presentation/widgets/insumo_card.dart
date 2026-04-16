@@ -1,3 +1,4 @@
+/*
 import 'package:flutter/material.dart';
 import '../../domain/entities/insumo.dart';
 
@@ -153,20 +154,165 @@ class InsumoCard extends StatelessWidget {
     );
   }
 }
+*/
 
-class _InfoChip extends StatelessWidget {
+import 'package:flutter/material.dart';
+import '../../domain/entities/insumo.dart';
+
+class InsumoCard extends StatelessWidget {
+  final Insumo insumo;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  const InsumoCard({
+    super.key,
+    required this.insumo,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      insumo.nome,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, size: 20),
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete_outline,
+                              size: 20,
+                              color: Colors.red,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Excluir',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onSelected: (value) {
+                      if (value == 'delete') onDelete();
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _InfoChip(
+                    label: 'Compra',
+                    value:
+                        '${insumo.quantidade.toStringAsFixed(2)} ${insumo.unidade.label}',
+                  ),
+                  _InfoChip(
+                    label: 'Valor pago',
+                    value: 'R\$ ${insumo.valorPago.toStringAsFixed(2)}',
+                  ),
+                  _InfoChip(
+                    label: 'Custo unit.',
+                    value:
+                        'R\$ ${insumo.custoUnitario.toStringAsFixed(4)}/${insumo.unidade.label}',
+                  ),
+                  _InfoChip(
+                    label: 'Estoque',
+                    value:
+                        '${insumo.quantidadeDisponivel.toStringAsFixed(2)} ${insumo.unidade.label}',
+                    color:
+                        insumo.quantidadeDisponivel <= insumo.quantidadeMinima
+                        ? colorScheme.errorContainer
+                        : null,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/*
+class _DeprecatedInfoChip extends StatelessWidget {
   final String label;
   final String value;
+  final Color? color;
 
-  const _InfoChip({required this.label, required this.value});
+  const _InfoChip({
+    required this.label,
+    required this.value,
+    this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
+        color: color ?? colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant),
+          ),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+*/
+
+class _InfoChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? color;
+
+  const _InfoChip({required this.label, required this.value, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color ?? colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
