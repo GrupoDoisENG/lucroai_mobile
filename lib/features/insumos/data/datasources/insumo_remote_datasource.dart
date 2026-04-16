@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/api_constants.dart';
 import '../../domain/entities/insumo.dart';
@@ -33,13 +34,26 @@ class InsumoRemoteDatasourceImpl implements InsumoRemoteDatasource {
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (ativo != null) queryParams['ativo'] = ativo;
-      if (categoria != null) queryParams['categoria'] = categoria.value;
-      if (search != null && search.isNotEmpty) queryParams['search'] = search;
 
-      final response = await dio.get(ApiConstants.insumos);
+      if (ativo != null) {
+        queryParams['ativo'] = ativo;
+      }
+
+      if (categoria != null) {
+        queryParams['categoria'] = categoria.value;
+      }
+
+      if (search != null && search.trim().isNotEmpty) {
+        queryParams['search'] = search.trim();
+      }
+
+      final response = await dio.get(
+        ApiConstants.insumos,
+        queryParameters: queryParams,
+      );
 
       final data = response.data as List<dynamic>;
+
       return data
           .map((json) => InsumoModel.fromJson(json as Map<String, dynamic>))
           .toList();
@@ -95,11 +109,22 @@ class InsumoRemoteDatasourceImpl implements InsumoRemoteDatasource {
         message: 'Sem conexão com o servidor: ${e.message}',
       );
     }
-    return ServerException(
-      message:
-          e.response?.data?['message']?.toString() ??
+
+    final dynamic responseData = e.response?.data;
+    String message = 'Erro no servidor';
+
+    if (responseData is Map<String, dynamic>) {
+      message =
+          responseData['message']?.toString() ??
+          responseData['error']?.toString() ??
           e.message ??
-          'Erro no servidor',
+          message;
+    } else if (e.message != null && e.message!.trim().isNotEmpty) {
+      message = e.message!;
+    }
+
+    return ServerException(
+      message: message,
       statusCode: e.response?.statusCode,
     );
   }

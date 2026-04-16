@@ -1,170 +1,199 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/entities/insumo.dart';
 import '../../domain/usecases/create_insumo_usecase.dart';
 import '../../domain/usecases/delete_insumo_usecase.dart';
-import '../../domain/usecases/get_insumo_usecase.dart';
 import '../../domain/usecases/get_insumos_usecase.dart';
 import '../../domain/usecases/toggle_insumo_ativo_usecase.dart';
 import '../../domain/usecases/update_insumo_usecase.dart';
 import 'insumos_state.dart';
 
 class InsumosCubit extends Cubit<InsumosState> {
-  final GetInsumosUsecase getInsumos;
-  final GetInsumoUsecase getInsumo;
-  final CreateInsumoUsecase createInsumo;
-  final UpdateInsumoUsecase updateInsumo;
-  final DeleteInsumoUsecase deleteInsumo;
-  final ToggleInsumoAtivoUsecase toggleAtivo;
+  final GetInsumosUsecase getInsumosUsecase;
+  final CreateInsumoUsecase createInsumoUsecase;
+  final UpdateInsumoUsecase updateInsumoUsecase;
+  final DeleteInsumoUsecase deleteInsumoUsecase;
+  final ToggleInsumoAtivoUsecase toggleInsumoAtivoUsecase;
 
-  List<Insumo> _currentInsumos = [];
-  bool? _filterAtivo;
-  InsumoCategoria? _filterCategoria;
-  String? _search;
+  Timer? _debounce;
 
   InsumosCubit({
-    required this.getInsumos,
-    required this.getInsumo,
-    required this.createInsumo,
-    required this.updateInsumo,
-    required this.deleteInsumo,
-    required this.toggleAtivo,
-  }) : super(const InsumosInitial());
+    required this.getInsumosUsecase,
+    required this.createInsumoUsecase,
+    required this.updateInsumoUsecase,
+    required this.deleteInsumoUsecase,
+    required this.toggleInsumoAtivoUsecase,
+  }) : super(const InsumosState());
 
-  Future<void> loadInsumos({
-    bool? ativo,
-    InsumoCategoria? categoria,
-    String? search,
-    bool resetFilters = false,
-  }) async {
-    if (resetFilters) {
-      _filterAtivo = null;
-      _filterCategoria = null;
-      _search = null;
-    } else {
-      if (ativo != _filterAtivo || categoria != _filterCategoria) {
-        _filterAtivo = ativo;
-        _filterCategoria = categoria;
-      }
-      if (search != null) _search = search;
-    }
-
-    emit(const InsumosLoading());
-    try {
-      final result = await getInsumos(
-        ativo: _filterAtivo,
-        categoria: _filterCategoria,
-        search: _search,
+  Future<void> loadInsumos({String? search, bool showLoader = true}) async {
+    if (showLoader) {
+      emit(
+        state.copyWith(
+          status: InsumosStatus.loading,
+          search: search ?? state.search,
+          clearErrorMessage: true,
+        ),
       );
-      _currentInsumos = result;
-      emit(InsumosLoaded(
-        insumos: result,
-        filterAtivo: _filterAtivo,
-        filterCategoria: _filterCategoria,
-        search: _search,
-      ));
+    } else {
+      emit(
+        state.copyWith(
+          search: search ?? state.search,
+          clearErrorMessage: true,
+        ),
+      );
+    }
+
+    try {
+      final result = await getInsumosUsecase(
+        search: search ?? state.search,
+        ativo: true,
+      );
+
+      emit(
+        state.copyWith(
+          status: InsumosStatus.success,
+          insumos: result,
+          search: search ?? state.search,
+          clearErrorMessage: true,
+        ),
+      );
     } catch (e) {
-      emit(InsumosError(e.toString()));
+      emit(
+        state.copyWith(
+          status: InsumosStatus.error,
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
 
-  Future<void> applyFilter({bool? ativo, InsumoCategoria? categoria}) async {
-    _filterAtivo = ativo;
-    _filterCategoria = categoria;
-    await loadInsumos();
+  void onSearchChanged(String value) {
+    emit(state.copyWith(search: value));
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      loadInsumos(search: value, showLoader: false);
+    });
   }
 
-  Future<void> searchInsumos(String search) async {
-    _search = search.isEmpty ? null : search;
-    await loadInsumos();
-  }
-
-  Future<bool> saveInsumo({
-    String? id,
+  Future<void> createInsumo({
     required String nome,
     String? descricao,
     required InsumoCategoria categoria,
     required InsumoUnidadeMedida unidadeMedida,
     required double precoUnitario,
     required double estoqueMinimo,
-    bool ativo = true,
+    double? quantidadeEmbalagem,
+    double? precoEmbalagem,
   }) async {
-    emit(InsumoActionLoading(_currentInsumos));
-    try {
-      if (id == null) {
-        await createInsumo(
-          nome: nome,
-          descricao: descricao,
-          categoria: categoria,
-          unidadeMedida: unidadeMedida,
-          precoUnitario: precoUnitario,
-          estoqueMinimo: estoqueMinimo,
-        );
-      } else {
-        await updateInsumo(
-          id: id,
-          nome: nome,
-          descricao: descricao,
-          categoria: categoria,
-          unidadeMedida: unidadeMedida,
-          precoUnitario: precoUnitario,
-          estoqueMinimo: estoqueMinimo,
-          ativo: ativo,
-        );
-      }
+    emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
 
-      final result = await getInsumos(
-        ativo: _filterAtivo,
-        categoria: _filterCategoria,
-        search: _search,
+    try {
+      await createInsumoUsecase(
+        nome: nome,
+        descricao: descricao,
+        categoria: categoria,
+        unidadeMedida: unidadeMedida,
+        precoUnitario: precoUnitario,
+        estoqueMinimo: estoqueMinimo,
+        quantidadeEmbalagem: quantidadeEmbalagem,
+        precoEmbalagem: precoEmbalagem,
       );
-      _currentInsumos = result;
-      emit(InsumoActionSuccess(
-        insumos: result,
-        message: id == null ? 'Insumo criado com sucesso!' : 'Insumo atualizado com sucesso!',
-      ));
-      return true;
+
+      emit(state.copyWith(isSubmitting: false));
+      await loadInsumos(search: state.search, showLoader: false);
     } catch (e) {
-      emit(InsumoActionError(insumos: _currentInsumos, message: e.toString()));
-      return false;
+      emit(
+        state.copyWith(
+          isSubmitting: false,
+          errorMessage: e.toString(),
+          status: InsumosStatus.error,
+        ),
+      );
     }
   }
 
-  Future<void> toggleInsumoAtivo(Insumo insumo) async {
-    emit(InsumoActionLoading(_currentInsumos));
+  Future<void> updateInsumo({
+    required String id,
+    String? nome,
+    String? descricao,
+    InsumoCategoria? categoria,
+    InsumoUnidadeMedida? unidadeMedida,
+    double? precoUnitario,
+    double? estoqueMinimo,
+    bool? ativo,
+    double? quantidadeEmbalagem,
+    double? precoEmbalagem,
+  }) async {
+    emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
+
     try {
-      await toggleAtivo(insumo.id, !insumo.ativo);
-      final result = await getInsumos(
-        ativo: _filterAtivo,
-        categoria: _filterCategoria,
-        search: _search,
+      await updateInsumoUsecase(
+        id: id,
+        nome: nome,
+        descricao: descricao,
+        categoria: categoria,
+        unidadeMedida: unidadeMedida,
+        precoUnitario: precoUnitario,
+        estoqueMinimo: estoqueMinimo,
+        ativo: ativo,
+        quantidadeEmbalagem: quantidadeEmbalagem,
+        precoEmbalagem: precoEmbalagem,
       );
-      _currentInsumos = result;
-      final status = !insumo.ativo ? 'ativado' : 'desativado';
-      emit(InsumoActionSuccess(
-        insumos: result,
-        message: 'Insumo $status com sucesso!',
-      ));
+
+      emit(state.copyWith(isSubmitting: false));
+      await loadInsumos(search: state.search, showLoader: false);
     } catch (e) {
-      emit(InsumoActionError(insumos: _currentInsumos, message: e.toString()));
+      emit(
+        state.copyWith(
+          isSubmitting: false,
+          errorMessage: e.toString(),
+          status: InsumosStatus.error,
+        ),
+      );
     }
   }
 
-  Future<void> removeInsumo(String id) async {
-    emit(InsumoActionLoading(_currentInsumos));
+  Future<void> deleteInsumo(String id) async {
+    emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
+
     try {
-      await deleteInsumo(id);
-      final result = await getInsumos(
-        ativo: _filterAtivo,
-        categoria: _filterCategoria,
-        search: _search,
-      );
-      _currentInsumos = result;
-      emit(InsumoActionSuccess(
-        insumos: result,
-        message: 'Insumo excluído com sucesso!',
-      ));
+      await deleteInsumoUsecase(id);
+      emit(state.copyWith(isSubmitting: false));
+      await loadInsumos(search: state.search, showLoader: false);
     } catch (e) {
-      emit(InsumoActionError(insumos: _currentInsumos, message: e.toString()));
+      emit(
+        state.copyWith(
+          isSubmitting: false,
+          errorMessage: e.toString(),
+          status: InsumosStatus.error,
+        ),
+      );
     }
+  }
+
+  Future<void> toggleAtivo(String id, bool ativo) async {
+    emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
+
+    try {
+      await toggleInsumoAtivoUsecase(id, ativo);
+      emit(state.copyWith(isSubmitting: false));
+      await loadInsumos(search: state.search, showLoader: false);
+    } catch (e) {
+      emit(
+        state.copyWith(
+          isSubmitting: false,
+          errorMessage: e.toString(),
+          status: InsumosStatus.error,
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<void> close() {
+    _debounce?.cancel();
+    return super.close();
   }
 }

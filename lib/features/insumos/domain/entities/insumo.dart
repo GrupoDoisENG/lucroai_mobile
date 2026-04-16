@@ -1,42 +1,84 @@
-import 'package:equatable/equatable.dart';
-
 enum InsumoCategoria {
-  materiaPrima('materia_prima', 'Matéria-Prima'),
-  embalagem('embalagem', 'Embalagem'),
-  ingrediente('ingrediente', 'Ingrediente'),
-  descartavel('descartavel', 'Descartável'),
-  limpeza('limpeza', 'Limpeza'),
-  outros('outros', 'Outros');
+  graos('graos'),
+  laticinios('laticinios'),
+  carnes('carnes'),
+  hortifruti('hortifruti'),
+  temperos('temperos'),
+  bebidas('bebidas'),
+  embalagens('embalagens'),
+  outros('outros');
+
+  const InsumoCategoria(this.value);
 
   final String value;
-  final String label;
-  const InsumoCategoria(this.value, this.label);
 
-  static InsumoCategoria fromValue(String value) =>
-      InsumoCategoria.values.firstWhere((e) => e.value == value);
+  String get label {
+    switch (this) {
+      case InsumoCategoria.graos:
+        return 'Grãos';
+      case InsumoCategoria.laticinios:
+        return 'Laticínios';
+      case InsumoCategoria.carnes:
+        return 'Carnes';
+      case InsumoCategoria.hortifruti:
+        return 'Hortifruti';
+      case InsumoCategoria.temperos:
+        return 'Temperos';
+      case InsumoCategoria.bebidas:
+        return 'Bebidas';
+      case InsumoCategoria.embalagens:
+        return 'Embalagens';
+      case InsumoCategoria.outros:
+        return 'Outros';
+    }
+  }
+
+  static InsumoCategoria fromValue(String value) {
+    return InsumoCategoria.values.firstWhere(
+      (e) => e.value == value,
+      orElse: () => InsumoCategoria.outros,
+    );
+  }
 }
 
 enum InsumoUnidadeMedida {
-  kg('kg', 'kg'),
-  g('g', 'g'),
-  mg('mg', 'mg'),
-  l('l', 'L'),
-  ml('ml', 'mL'),
-  un('un', 'un'),
-  cx('cx', 'cx'),
-  pct('pct', 'pct'),
-  m('m', 'm'),
-  cm('cm', 'cm');
+  gramas('g'),
+  quilogramas('kg'),
+  mililitros('ml'),
+  litros('l'),
+  unidades('un'),
+  porcao('porcao');
+
+  const InsumoUnidadeMedida(this.value);
 
   final String value;
-  final String label;
-  const InsumoUnidadeMedida(this.value, this.label);
 
-  static InsumoUnidadeMedida fromValue(String value) =>
-      InsumoUnidadeMedida.values.firstWhere((e) => e.value == value);
+  String get label {
+    switch (this) {
+      case InsumoUnidadeMedida.gramas:
+        return 'g';
+      case InsumoUnidadeMedida.quilogramas:
+        return 'kg';
+      case InsumoUnidadeMedida.mililitros:
+        return 'ml';
+      case InsumoUnidadeMedida.litros:
+        return 'l';
+      case InsumoUnidadeMedida.unidades:
+        return 'un';
+      case InsumoUnidadeMedida.porcao:
+        return 'porção';
+    }
+  }
+
+  static InsumoUnidadeMedida fromValue(String value) {
+    return InsumoUnidadeMedida.values.firstWhere(
+      (e) => e.value == value,
+      orElse: () => InsumoUnidadeMedida.unidades,
+    );
+  }
 }
 
-class Insumo extends Equatable {
+class Insumo {
   final String id;
   final String nome;
   final String? descricao;
@@ -47,6 +89,8 @@ class Insumo extends Equatable {
   final bool ativo;
   final DateTime criadoEm;
   final DateTime atualizadoEm;
+  final double? quantidadeEmbalagem;
+  final double? precoEmbalagem;
 
   const Insumo({
     required this.id,
@@ -59,19 +103,7 @@ class Insumo extends Equatable {
     required this.ativo,
     required this.criadoEm,
     required this.atualizadoEm,
+    this.quantidadeEmbalagem,
+    this.precoEmbalagem,
   });
-
-  @override
-  List<Object?> get props => [
-    id,
-    nome,
-    descricao,
-    categoria,
-    unidadeMedida,
-    precoUnitario,
-    estoqueMinimo,
-    ativo,
-    criadoEm,
-    atualizadoEm,
-  ];
 }

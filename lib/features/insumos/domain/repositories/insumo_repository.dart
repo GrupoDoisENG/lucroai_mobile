@@ -16,6 +16,8 @@ abstract class InsumoRepository {
     required InsumoUnidadeMedida unidadeMedida,
     required double precoUnitario,
     required double estoqueMinimo,
+    double? quantidadeEmbalagem,
+    double? precoEmbalagem,
   });
 
   Future<Insumo> updateInsumo({
@@ -27,6 +29,8 @@ abstract class InsumoRepository {
     double? precoUnitario,
     double? estoqueMinimo,
     bool? ativo,
+    double? quantidadeEmbalagem,
+    double? precoEmbalagem,
   });
 
   Future<void> deleteInsumo(String id);

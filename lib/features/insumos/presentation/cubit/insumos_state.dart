@@ -1,72 +1,41 @@
-import 'package:equatable/equatable.dart';
 import '../../domain/entities/insumo.dart';
 
-abstract class InsumosState extends Equatable {
-  const InsumosState();
-
-  @override
-  List<Object?> get props => [];
+enum InsumosStatus {
+  initial,
+  loading,
+  success,
+  error,
 }
 
-class InsumosInitial extends InsumosState {
-  const InsumosInitial();
-}
-
-class InsumosLoading extends InsumosState {
-  const InsumosLoading();
-}
-
-class InsumosLoaded extends InsumosState {
+class InsumosState {
+  final InsumosStatus status;
   final List<Insumo> insumos;
-  final bool? filterAtivo;
-  final InsumoCategoria? filterCategoria;
-  final String? search;
+  final String search;
+  final String? errorMessage;
+  final bool isSubmitting;
 
-  const InsumosLoaded({
-    required this.insumos,
-    this.filterAtivo,
-    this.filterCategoria,
-    this.search,
+  const InsumosState({
+    this.status = InsumosStatus.initial,
+    this.insumos = const [],
+    this.search = '',
+    this.errorMessage,
+    this.isSubmitting = false,
   });
 
-  @override
-  List<Object?> get props => [insumos, filterAtivo, filterCategoria, search];
-}
-
-class InsumosError extends InsumosState {
-  final String message;
-
-  const InsumosError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class InsumoActionLoading extends InsumosState {
-  final List<Insumo> insumos;
-
-  const InsumoActionLoading(this.insumos);
-
-  @override
-  List<Object?> get props => [insumos];
-}
-
-class InsumoActionSuccess extends InsumosState {
-  final List<Insumo> insumos;
-  final String message;
-
-  const InsumoActionSuccess({required this.insumos, required this.message});
-
-  @override
-  List<Object?> get props => [insumos, message];
-}
-
-class InsumoActionError extends InsumosState {
-  final List<Insumo> insumos;
-  final String message;
-
-  const InsumoActionError({required this.insumos, required this.message});
-
-  @override
-  List<Object?> get props => [insumos, message];
+  InsumosState copyWith({
+    InsumosStatus? status,
+    List<Insumo>? insumos,
+    String? search,
+    String? errorMessage,
+    bool? isSubmitting,
+    bool clearErrorMessage = false,
+  }) {
+    return InsumosState(
+      status: status ?? this.status,
+      insumos: insumos ?? this.insumos,
+      search: search ?? this.search,
+      errorMessage: clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
+      isSubmitting: isSubmitting ?? this.isSubmitting,
+    );
+  }
 }
