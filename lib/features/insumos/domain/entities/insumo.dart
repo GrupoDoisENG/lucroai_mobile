@@ -61,17 +61,21 @@ class Insumo extends Equatable {
     required this.atualizadoEm,
   });
 
+  String get detalheFormatado => "${categoria.label} • Mínimo: ${estoqueMinimo.toInt()} ${unidadeMedida.label}";
+  
+  String get custoUnitarioFormatado => "R\$ ${precoUnitario.toStringAsFixed(4)}/${unidadeMedida.label}";
+
   @override
   List<Object?> get props => [
-    id,
-    nome,
-    descricao,
-    categoria,
-    unidadeMedida,
-    precoUnitario,
-    estoqueMinimo,
-    ativo,
-    criadoEm,
-    atualizadoEm,
-  ];
+        id,
+        nome,
+        descricao,
+        categoria,
+        unidadeMedida,
+        precoUnitario,
+        estoqueMinimo,
+        ativo,
+        criadoEm,
+        atualizadoEm,
+      ];
 }
