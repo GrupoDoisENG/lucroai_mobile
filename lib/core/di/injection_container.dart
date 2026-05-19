@@ -17,6 +17,7 @@ import '../../features/estoques/domain/usecases/get_estoques_usecase.dart';
 import '../../features/estoques/domain/usecases/registrar_entrada_estoque_usecase.dart';
 import '../../features/estoques/domain/usecases/get_movimentacoes_usecase.dart';
 import '../../features/estoques/presentation/cubit/estoques_cubit.dart';
+import '../../features/auth/data/auth_remote_datasource.dart';
 import '../network/api_client.dart';
 
 final sl = GetIt.instance;
@@ -24,6 +25,9 @@ final sl = GetIt.instance;
 void initDependencies() {
   // External
   sl.registerLazySingleton<Dio>(() => ApiClient.create());
+
+  // Auth
+  sl.registerLazySingleton(() => AuthRemoteDatasource(dio: sl()));
 
   // Data sources
   sl.registerLazySingleton<InsumoRemoteDatasource>(

@@ -1,4 +1,5 @@
 import '../../../../core/network/api_constants.dart';
+import '../../../../core/auth/auth_session.dart';
 import '../../domain/entities/insumo.dart';
 
 class InsumoModel extends Insumo {
@@ -49,7 +50,7 @@ class InsumoModel extends Insumo {
 
   Map<String, dynamic> toJson() {
     return {
-      'empresaId': ApiConstants.defaultEmpresaId,
+      'empresaId': AuthSession.empresaId ?? ApiConstants.defaultEmpresaId,
       'nome': nome,
       'quantidadeBaseCusto': 1,
       'quantidadeDisponivelInicial': estoqueMinimo,
@@ -67,7 +68,7 @@ class InsumoModel extends Insumo {
     required double estoqueMinimo,
   }) {
     return {
-      'empresaId': ApiConstants.defaultEmpresaId,
+      'empresaId': AuthSession.empresaId ?? ApiConstants.defaultEmpresaId,
       'nome': nome,
       'quantidadeBaseCusto': 1,
       'quantidadeDisponivelInicial': estoqueMinimo,
