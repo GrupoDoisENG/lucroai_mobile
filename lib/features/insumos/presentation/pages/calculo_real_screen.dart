@@ -99,7 +99,7 @@ class _CalculoRealScreenState extends State<CalculoRealScreen> {
                           Container(height: 30, width: 1, color: Colors.white10),
                           Column(
                             children: [
-                              Text("${_viewModel.percentualInvisivel.toStringAsFixed(1)}%", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFFFFB74D))),
+                              Text("${_viewModel.percentualInvisivel.toStringAsFixed(1)}%", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFFB74D))),
                               Text("Custos Invisíveis", style: TextStyle(fontSize: 10, color: textSecondary)),
                             ],
                           ),
