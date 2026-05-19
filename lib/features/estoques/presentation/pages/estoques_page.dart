@@ -187,7 +187,10 @@ class _EstoquesPageState extends State<EstoquesPage> {
                 final isActionLoading = state is EstoqueActionLoading;
 
                 if (estoques.isEmpty && !isActionLoading) {
-                  return _EmptyView();
+                  return _EmptyView(
+                    onRefresh: () =>
+                        context.read<EstoquesCubit>().loadEstoques(),
+                  );
                 }
 
                 return Stack(
@@ -198,8 +201,12 @@ class _EstoquesPageState extends State<EstoquesPage> {
                       onRefresh: () =>
                           context.read<EstoquesCubit>().loadEstoques(),
                       child: ListView.builder(
-                        padding:
-                            const EdgeInsets.only(top: 8, bottom: 88, left: 0, right: 0),
+                        padding: const EdgeInsets.only(
+                          top: 8,
+                          bottom: 88,
+                          left: 0,
+                          right: 0,
+                        ),
                         itemCount: estoques.length,
                         itemBuilder: (_, index) {
                           final estoque = estoques[index];
@@ -321,75 +328,55 @@ class _FilterSheetState extends State<_FilterSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Filtros',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+          Row(
+            children: [
+              const Text(
+                'Filtros',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Status do Estoque',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                CheckboxListTile(
-                  title: const Text(
-                    'Apenas Estoque Baixo',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  value: _tempFilter == true,
-                  onChanged: (value) {
-                    setState(() {
-                      _tempFilter = value == true ? true : null;
-                    });
-                  },
-                  activeColor: const Color(0xFFE85D33),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () {
-                  widget.onApply(_tempFilter);
-                  Navigator.pop(context);
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFE85D33),
-                ),
-                child: const Text('Aplicar Filtros'),
               ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.grey),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+          const Divider(color: Colors.white10),
+          const SizedBox(height: 8),
+          const Text('Status', style: TextStyle(color: Colors.white70)),
+          const SizedBox(height: 8),
+          SegmentedButton<bool?>(
+            segments: const [
+              ButtonSegment(value: null, label: Text('Todos')),
+              ButtonSegment(value: true, label: Text('Baixo')),
+            ],
+            selected: {_tempFilter},
+            onSelectionChanged: (value) => setState(
+              () => _tempFilter = value.first,
+            ),
+          ),
+          const SizedBox(height: 24),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFE85D33),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onApply(_tempFilter);
+            },
+            child: const Text(
+              'Aplicar Filtros',
+              style: TextStyle(color: Colors.white),
             ),
           ),
         ],
@@ -399,6 +386,10 @@ class _FilterSheetState extends State<_FilterSheet> {
 }
 
 class _EmptyView extends StatelessWidget {
+  final VoidCallback onRefresh;
+
+  const _EmptyView({required this.onRefresh});
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -421,6 +412,18 @@ class _EmptyView extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey.withAlpha(200),
+            ),
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFE85D33),
+            ),
+            onPressed: onRefresh,
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            label: const Text(
+              'Atualizar',
+              style: TextStyle(color: Colors.white),
             ),
           ),
         ],
@@ -464,12 +467,16 @@ class _ErrorView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          FilledButton(
+          FilledButton.icon(
             onPressed: onRetry,
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFE85D33),
             ),
-            child: const Text('Tentar Novamente'),
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            label: const Text(
+              'Tentar Novamente',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

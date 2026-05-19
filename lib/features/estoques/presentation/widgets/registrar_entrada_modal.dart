@@ -225,13 +225,16 @@ class _RegistrarEntradaModalState extends State<RegistrarEntradaModal> {
                     final isLoading = state is EstoqueActionLoading;
                     return SizedBox(
                       width: double.infinity,
-                      child: FilledButton(
+                      height: 50,
+                      child: ElevatedButton(
                         onPressed: isLoading ? null : _registrarEntrada,
-                        style: FilledButton.styleFrom(
+                        style: ElevatedButton.styleFrom(
                           backgroundColor: primaryOrange,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
                           disabledBackgroundColor: Colors.grey.withAlpha(100),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                         child: isLoading
                             ? SizedBox(

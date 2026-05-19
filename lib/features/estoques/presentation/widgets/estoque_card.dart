@@ -41,7 +41,7 @@ class EstoqueCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       elevation: 1,
       color: estoque.isBaixoEstoque 
           ? colorScheme.surfaceContainerHigh 
@@ -100,6 +100,24 @@ class EstoqueCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, size: 20),
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(
+                        value: 'entrada',
+                        child: Row(
+                          children: [
+                            Icon(Icons.add, size: 20),
+                            SizedBox(width: 8),
+                            Text('Registrar entrada'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onSelected: (value) {
+                      if (value == 'entrada') onTapRegistrarEntrada();
+                    },
+                  ),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -137,8 +155,6 @@ class EstoqueCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              
-              // Barra de progresso
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
@@ -228,22 +244,6 @@ class EstoqueCard extends StatelessWidget {
                       ),
                     ),
                 ],
-              ),
-              const SizedBox(height: 12),
-              
-              // Botão para registrar entrada
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: onTapRegistrarEntrada,
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Registrar Entrada'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFE85D33),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                ),
               ),
             ],
           ),
