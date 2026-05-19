@@ -37,12 +37,34 @@ class InsumoRemoteDatasourceImpl implements InsumoRemoteDatasource {
       if (categoria != null) queryParams['categoria'] = categoria.value;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
 
-      final response = await dio.get(ApiConstants.insumos);
+      final response = await dio.get(
+        ApiConstants.insumos,
+        queryParameters: queryParams,
+      );
 
-      final data = response.data as List<dynamic>;
-      return data
+      final data = _unwrapData(response.data) as List<dynamic>;
+      var insumos = data
           .map((json) => InsumoModel.fromJson(json as Map<String, dynamic>))
           .toList();
+
+      if (ativo != null) {
+        insumos = insumos.where((insumo) => insumo.ativo == ativo).toList();
+      }
+      if (categoria != null) {
+        insumos = insumos
+            .where((insumo) => insumo.categoria == categoria)
+            .toList();
+      }
+      if (search != null && search.isNotEmpty) {
+        final normalizedSearch = search.toLowerCase();
+        insumos = insumos
+            .where(
+              (insumo) => insumo.nome.toLowerCase().contains(normalizedSearch),
+            )
+            .toList();
+      }
+
+      return insumos;
     } on DioException catch (e) {
       throw _buildException(e);
     }
@@ -52,7 +74,9 @@ class InsumoRemoteDatasourceImpl implements InsumoRemoteDatasource {
   Future<InsumoModel> getInsumo(String id) async {
     try {
       final response = await dio.get(ApiConstants.insumoById(id));
-      return InsumoModel.fromJson(response.data as Map<String, dynamic>);
+      return InsumoModel.fromJson(
+        _unwrapData(response.data) as Map<String, dynamic>,
+      );
     } on DioException catch (e) {
       throw _buildException(e);
     }
@@ -62,7 +86,9 @@ class InsumoRemoteDatasourceImpl implements InsumoRemoteDatasource {
   Future<InsumoModel> createInsumo(Map<String, dynamic> data) async {
     try {
       final response = await dio.post(ApiConstants.insumos, data: data);
-      return InsumoModel.fromJson(response.data as Map<String, dynamic>);
+      return InsumoModel.fromJson(
+        _unwrapData(response.data) as Map<String, dynamic>,
+      );
     } on DioException catch (e) {
       throw _buildException(e);
     }
@@ -71,8 +97,10 @@ class InsumoRemoteDatasourceImpl implements InsumoRemoteDatasource {
   @override
   Future<InsumoModel> updateInsumo(String id, Map<String, dynamic> data) async {
     try {
-      final response = await dio.put(ApiConstants.insumoById(id), data: data);
-      return InsumoModel.fromJson(response.data as Map<String, dynamic>);
+      final response = await dio.patch(ApiConstants.insumoById(id), data: data);
+      return InsumoModel.fromJson(
+        _unwrapData(response.data) as Map<String, dynamic>,
+      );
     } on DioException catch (e) {
       throw _buildException(e);
     }
@@ -102,5 +130,13 @@ class InsumoRemoteDatasourceImpl implements InsumoRemoteDatasource {
           'Erro no servidor',
       statusCode: e.response?.statusCode,
     );
+  }
+
+  dynamic _unwrapData(dynamic responseData) {
+    if (responseData is Map<String, dynamic> &&
+        responseData.containsKey('data')) {
+      return responseData['data'];
+    }
+    return responseData;
   }
 }

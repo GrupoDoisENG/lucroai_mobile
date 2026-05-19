@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-// Importando a sua página oficial de insumos
+// Importando as páginas
 import '../../../features/insumos/presentation/pages/insumos_page.dart';
+import '../../../features/estoques/presentation/pages/estoques_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -22,7 +23,7 @@ class _MainScreenState extends State<MainScreen> {
     const Center(child: Text("Receitas - Em breve", style: TextStyle(color: Colors.white))),         // Índice 2
     const Center(child: Text("Cálculo Real - Em breve", style: TextStyle(color: Colors.white))),     // Índice 3
     const Center(child: Text("Vendas - Em breve", style: TextStyle(color: Colors.white))),           // Índice 4
-    const Center(child: Text("Estoque - Em breve", style: TextStyle(color: Colors.white))),          // Índice 5
+    const EstoquesPage(),                                                                             // Índice 5
     const Center(child: Text("Simular - Em breve", style: TextStyle(color: Colors.white))),          // Índice 6
   ];
 
