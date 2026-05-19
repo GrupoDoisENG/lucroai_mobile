@@ -10,13 +10,6 @@ import '../../features/insumos/domain/usecases/get_insumos_usecase.dart';
 import '../../features/insumos/domain/usecases/toggle_insumo_ativo_usecase.dart';
 import '../../features/insumos/domain/usecases/update_insumo_usecase.dart';
 import '../../features/insumos/presentation/cubit/insumos_cubit.dart';
-import '../../features/estoques/data/datasources/estoque_remote_datasource.dart';
-import '../../features/estoques/data/repositories/estoque_repository_impl.dart';
-import '../../features/estoques/domain/repositories/estoque_repository.dart';
-import '../../features/estoques/domain/usecases/get_estoques_usecase.dart';
-import '../../features/estoques/domain/usecases/registrar_entrada_estoque_usecase.dart';
-import '../../features/estoques/domain/usecases/get_movimentacoes_usecase.dart';
-import '../../features/estoques/presentation/cubit/estoques_cubit.dart';
 import '../network/api_client.dart';
 
 final sl = GetIt.instance;
@@ -52,32 +45,6 @@ void initDependencies() {
       updateInsumo: sl(),
       deleteInsumo: sl(),
       toggleAtivo: sl(),
-    ),
-  );
-
-  // ========== ESTOQUE DEPENDENCIES ==========
-  
-  // Data sources
-  sl.registerLazySingleton<EstoqueRemoteDatasource>(
-    () => EstoqueRemoteDatasource(dio: sl()),
-  );
-
-  // Repositories
-  sl.registerLazySingleton<EstoqueRepository>(
-    () => EstoqueRepositoryImpl(remoteDatasource: sl()),
-  );
-
-  // Use cases
-  sl.registerLazySingleton(() => GetEstoquesUsecase(sl()));
-  sl.registerLazySingleton(() => RegistrarEntradaEstoqueUsecase(sl()));
-  sl.registerLazySingleton(() => GetMovimentacoesUsecase(sl()));
-
-  // Cubits
-  sl.registerFactory(
-    () => EstoquesCubit(
-      getEstoques: sl(),
-      registrarEntrada: sl(),
-      getMovimentacoes: sl(),
     ),
   );
 }

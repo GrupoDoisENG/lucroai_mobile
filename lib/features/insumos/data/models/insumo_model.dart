@@ -1,4 +1,3 @@
-import '../../../../core/network/api_constants.dart';
 import '../../domain/entities/insumo.dart';
 
 class InsumoModel extends Insumo {
@@ -16,45 +15,29 @@ class InsumoModel extends Insumo {
   });
 
   factory InsumoModel.fromJson(Map<String, dynamic> json) {
-    final unidade = (json['unidade'] ?? json['unidade_medida'] ?? 'UN')
-        .toString()
-        .toLowerCase();
-    final dataCriacao = json['dataCriacao'] ?? json['criado_em'];
-
     return InsumoModel(
-      id: json['id'].toString(),
+      id: json['id'] as String,
       nome: json['nome'] as String,
       descricao: json['descricao'] as String?,
-      categoria: json['categoria'] != null
-          ? InsumoCategoria.fromValue(json['categoria'] as String)
-          : InsumoCategoria.materiaPrima,
-      unidadeMedida: InsumoUnidadeMedida.fromValue(unidade),
-      precoUnitario: double.parse(
-        (json['preco_unitario'] ??
-                json['precoUnitario'] ??
-                json['custoUnitario'])
-            .toString(),
-      ),
-      estoqueMinimo: double.parse(
-        (json['estoque_minimo'] ?? json['quantidadeDisponivel'] ?? 0)
-            .toString(),
-      ),
-      ativo: json['ativo'] as bool? ?? true,
-      criadoEm: DateTime.parse(dataCriacao as String),
-      atualizadoEm: DateTime.parse(
-        (json['atualizado_em'] ?? dataCriacao) as String,
-      ),
+      categoria: InsumoCategoria.fromValue(json['categoria'] as String),
+      unidadeMedida: InsumoUnidadeMedida.fromValue(json['unidade_medida'] as String),
+      precoUnitario: double.parse(json['preco_unitario'].toString()),
+      estoqueMinimo: double.parse(json['estoque_minimo'].toString()),
+      ativo: json['ativo'] as bool,
+      criadoEm: DateTime.parse(json['criado_em'] as String),
+      atualizadoEm: DateTime.parse(json['atualizado_em'] as String),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'empresaId': ApiConstants.defaultEmpresaId,
       'nome': nome,
-      'quantidadeBaseCusto': 1,
-      'quantidadeDisponivelInicial': estoqueMinimo,
-      'unidade': _toBackendUnidade(unidadeMedida),
-      'valorPago': precoUnitario,
+      'descricao': descricao,
+      'categoria': categoria.value,
+      'unidade_medida': unidadeMedida.value,
+      'preco_unitario': precoUnitario,
+      'estoque_minimo': estoqueMinimo,
+      'ativo': ativo,
     };
   }
 
@@ -67,12 +50,12 @@ class InsumoModel extends Insumo {
     required double estoqueMinimo,
   }) {
     return {
-      'empresaId': ApiConstants.defaultEmpresaId,
       'nome': nome,
-      'quantidadeBaseCusto': 1,
-      'quantidadeDisponivelInicial': estoqueMinimo,
-      'unidade': _toBackendUnidade(unidadeMedida),
-      'valorPago': precoUnitario,
+      if (descricao != null) 'descricao': descricao,
+      'categoria': categoria.value,
+      'unidade_medida': unidadeMedida.value,
+      'preco_unitario': precoUnitario,
+      'estoque_minimo': estoqueMinimo,
     };
   }
 
@@ -87,20 +70,12 @@ class InsumoModel extends Insumo {
   }) {
     return {
       if (nome != null) 'nome': nome,
-      if (unidadeMedida != null) 'unidade': _toBackendUnidade(unidadeMedida),
-      if (precoUnitario != null) 'valorPago': precoUnitario,
-      if (precoUnitario != null) 'quantidadeBaseCusto': 1,
-    };
-  }
-
-  static String _toBackendUnidade(InsumoUnidadeMedida unidade) {
-    return switch (unidade) {
-      InsumoUnidadeMedida.g => 'G',
-      InsumoUnidadeMedida.kg => 'KG',
-      InsumoUnidadeMedida.ml => 'ML',
-      InsumoUnidadeMedida.l => 'L',
-      InsumoUnidadeMedida.un => 'UN',
-      _ => 'UN',
+      if (descricao != null) 'descricao': descricao,
+      if (categoria != null) 'categoria': categoria.value,
+      if (unidadeMedida != null) 'unidade_medida': unidadeMedida.value,
+      if (precoUnitario != null) 'preco_unitario': precoUnitario,
+      if (estoqueMinimo != null) 'estoque_minimo': estoqueMinimo,
+      if (ativo != null) 'ativo': ativo,
     };
   }
 }
