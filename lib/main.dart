@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/di/injection_container.dart';
 import 'features/insumos/presentation/cubit/insumos_cubit.dart';
+import 'features/estoques/presentation/cubit/estoques_cubit.dart';
 
 // Importando a nossa Tela Base (com a Nav Bar) direto da pasta core oficial
 import 'core/presentation/pages/main_screen.dart';
@@ -28,10 +29,13 @@ class LucroAiApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      // O BlocProvider envolve a MainScreen, garantindo que o estado de Insumos
-      // esteja disponível quando a MainScreen puxar a InsumosPage.
-      home: BlocProvider(
-        create: (_) => sl<InsumosCubit>(),
+      // O MultiBlocProvider envolve a MainScreen, garantindo que os estados de Insumos e Estoques
+      // estejam disponíveis quando a MainScreen puxar as respectivas páginas.
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => sl<InsumosCubit>()),
+          BlocProvider(create: (_) => sl<EstoquesCubit>()),
+        ],
         child: const MainScreen(),
       ),
     );

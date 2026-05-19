@@ -1,8 +1,8 @@
+// lib/screens/main_screen.dart
 import 'package:flutter/material.dart';
-
-// Importando as páginas
-import '../../../features/insumos/presentation/pages/insumos_page.dart';
-import '../../../features/estoques/presentation/pages/estoques_page.dart';
+import 'insumos_screen.dart';
+import 'calculo_real_screen.dart';
+// import 'receitas_screen.dart'; // Descomente quando criar a tela de receitas oficial
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -12,19 +12,17 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // Começamos no índice 1, que é a aba de Insumos
-  int _indiceAtual = 1;
+  int _indiceAtual = 1; // Começa na aba Insumos (índice 1)
 
-  // A lista de páginas. O IndexedStack vai exibir a página 
-  // correspondente ao número do _indiceAtual.
-  final List<Widget> _paginas = [
-    const Center(child: Text("Home - Em breve", style: TextStyle(color: Colors.white))),             // Índice 0
-    const InsumosPage(),                                                                             // Índice 1 (A sua tela real!)
-    const Center(child: Text("Receitas - Em breve", style: TextStyle(color: Colors.white))),         // Índice 2
-    const Center(child: Text("Cálculo Real - Em breve", style: TextStyle(color: Colors.white))),     // Índice 3
-    const Center(child: Text("Vendas - Em breve", style: TextStyle(color: Colors.white))),           // Índice 4
-    const EstoquesPage(),                                                                             // Índice 5
-    const Center(child: Text("Simular - Em breve", style: TextStyle(color: Colors.white))),          // Índice 6
+  // Lista das telas reais do seu app. A ordem importa!
+  final List<Widget> _telas = [
+    const Center(child: Text("Home - Em breve", style: TextStyle(color: Colors.white))), // 0: Home
+    const InsumosScreen(),                                                                 // 1: Insumos
+    const Center(child: Text("Receitas - Em breve", style: TextStyle(color: Colors.white))), // 2: Receitas
+    const CalculoRealScreen(),                                                             // 3: Custos
+    const Center(child: Text("Vendas - Em breve", style: TextStyle(color: Colors.white))),   // 4: Vendas
+    const Center(child: Text("Estoque - Em breve", style: TextStyle(color: Colors.white))),  // 5: Estoque
+    const Center(child: Text("Simular - Em breve", style: TextStyle(color: Colors.white))),  // 6: Simular
   ];
 
   void _aoTocarNoMenu(int index) {
@@ -40,13 +38,12 @@ class _MainScreenState extends State<MainScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
-      // O IndexedStack mantém o estado de todas as telas vivo, 
-      // mas só exibe a que está selecionada no menu.
+      // IndexedStack mantém o estado das telas ao navegar
       body: IndexedStack(
         index: _indiceAtual,
-        children: _paginas,
+        children: _telas,
       ),
-      // Barra de navegação inferior fixa
+      // O menu agora fica centralizado aqui, e não dentro de cada tela
       bottomNavigationBar: Container(
         height: 65,
         color: const Color(0xFF050505),
@@ -66,14 +63,14 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  // Construtor dos botões do menu inferior
+  // Widget do ícone que agora tem ação de clique
   Widget _buildNavIcon(IconData icon, String label, int index, Color inactiveColor, Color activeColor) {
     final bool isActive = _indiceAtual == index;
     final color = isActive ? activeColor : inactiveColor;
     
     return GestureDetector(
-      onTap: () => _aoTocarNoMenu(index),
-      behavior: HitTestBehavior.opaque,
+      onTap: () => _aoTocarNoMenu(index), // Altera a tela ao clicar
+      behavior: HitTestBehavior.opaque, // Melhora a área de clique
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
