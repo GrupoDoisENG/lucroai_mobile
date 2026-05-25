@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_constants.dart';
-import '../../domain/entities/movimentacao_estoque.dart';
 import '../models/estoque_com_insumo_model.dart';
 import '../models/movimentacao_estoque_model.dart';
 

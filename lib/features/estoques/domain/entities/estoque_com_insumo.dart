@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'estoque.dart';
 
 class EstoqueComInsumo extends Equatable {
   final int id;

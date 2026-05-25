@@ -1,4 +1,3 @@
-import '../entities/estoque.dart';
 import '../entities/movimentacao_estoque.dart';
 import '../entities/estoque_com_insumo.dart';
 

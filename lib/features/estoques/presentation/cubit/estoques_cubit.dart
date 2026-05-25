@@ -110,12 +110,4 @@ class EstoquesCubit extends Cubit<EstoquesState> {
       rethrow;
     }
   }
-
-  List<EstoqueComInsumo> _getEstoques(EstoquesState state) {
-    if (state is EstoquesLoaded) return state.estoques;
-    if (state is EstoqueActionLoading) return state.estoques;
-    if (state is EstoqueActionSuccess) return state.estoques;
-    if (state is EstoqueActionError) return state.estoques;
-    return [];
-  }
 }
