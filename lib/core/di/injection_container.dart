@@ -58,30 +58,4 @@ void initDependencies() {
       toggleAtivo: sl(),
     ),
   );
-
-  // ========== ESTOQUE DEPENDENCIES ==========
-  
-  // Data sources
-  sl.registerLazySingleton<EstoqueRemoteDatasource>(
-    () => EstoqueRemoteDatasource(dio: sl()),
-  );
-
-  // Repositories
-  sl.registerLazySingleton<EstoqueRepository>(
-    () => EstoqueRepositoryImpl(remoteDatasource: sl()),
-  );
-
-  // Use cases
-  sl.registerLazySingleton(() => GetEstoquesUsecase(sl()));
-  sl.registerLazySingleton(() => RegistrarEntradaEstoqueUsecase(sl()));
-  sl.registerLazySingleton(() => GetMovimentacoesUsecase(sl()));
-
-  // Cubits
-  sl.registerFactory(
-    () => EstoquesCubit(
-      getEstoques: sl(),
-      registrarEntrada: sl(),
-      getMovimentacoes: sl(),
-    ),
-  );
 }

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/auth/auth_session.dart';
 import 'core/di/injection_container.dart';
+import 'features/insumos/presentation/cubit/insumos_cubit.dart';
+
+// Importando a nossa Tela Base (com a Nav Bar) direto da pasta core oficial
 import 'core/presentation/pages/main_screen.dart';
 import 'features/auth/data/auth_remote_datasource.dart';
 import 'features/auth/presentation/pages/login_page.dart';
@@ -29,7 +32,12 @@ class LucroAiApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const AuthGate(),
+      // O BlocProvider envolve a MainScreen, garantindo que o estado de Insumos
+      // esteja disponível quando a MainScreen puxar a InsumosPage.
+      home: BlocProvider(
+        create: (_) => sl<InsumosCubit>(),
+        child: const MainScreen(),
+      ),
     );
   }
 }
