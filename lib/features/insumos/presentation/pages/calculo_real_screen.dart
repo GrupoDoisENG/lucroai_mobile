@@ -244,7 +244,7 @@ class _CalculoRealScreenState extends State<CalculoRealScreen> {
       onChanged: onChanged,
       decoration: InputDecoration(
         hintText: "0.00",
-        hintStyle: TextStyle(color: textSecondary.withOpacity(0.5)),
+        hintStyle: TextStyle(color: textSecondary.withValues(alpha: 0.5)),
         filled: true,
         fillColor: inputDark,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),

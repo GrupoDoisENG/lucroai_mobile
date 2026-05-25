@@ -2,22 +2,14 @@ import '../../domain/entities/movimentacao_estoque.dart';
 
 class MovimentacaoEstoqueModel extends MovimentacaoEstoque {
   const MovimentacaoEstoqueModel({
-    required int id,
-    required int insumoId,
-    required TipoMovimentacao tipo,
-    required OrigemMovimentacao origem,
-    required double quantidade,
-    int? referenciaId,
-    required DateTime dataMovimentacao,
-  }) : super(
-    id: id,
-    insumoId: insumoId,
-    tipo: tipo,
-    origem: origem,
-    quantidade: quantidade,
-    referenciaId: referenciaId,
-    dataMovimentacao: dataMovimentacao,
-  );
+    required super.id,
+    required super.insumoId,
+    required super.tipo,
+    required super.origem,
+    required super.quantidade,
+    super.referenciaId,
+    required super.dataMovimentacao,
+  });
 
   factory MovimentacaoEstoqueModel.fromJson(Map<String, dynamic> json) {
     final tipoString = (json['tipo'] as String).toUpperCase();

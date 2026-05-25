@@ -2,24 +2,15 @@ import '../../domain/entities/estoque_com_insumo.dart';
 
 class EstoqueComInsumoModel extends EstoqueComInsumo {
   const EstoqueComInsumoModel({
-    required int id,
-    required String insumoId,
-    required String insumoNome,
-    required String insumoCategoria,
-    required String insumoUnidade,
-    required double quantidadeDisponivel,
-    required double quantidadeMinima,
-    DateTime? dataAlteracao,
-  }) : super(
-    id: id,
-    insumoId: insumoId,
-    insumoNome: insumoNome,
-    insumoCategoria: insumoCategoria,
-    insumoUnidade: insumoUnidade,
-    quantidadeDisponivel: quantidadeDisponivel,
-    quantidadeMinima: quantidadeMinima,
-    dataAlteracao: dataAlteracao,
-  );
+    required super.id,
+    required super.insumoId,
+    required super.insumoNome,
+    required super.insumoCategoria,
+    required super.insumoUnidade,
+    required super.quantidadeDisponivel,
+    required super.quantidadeMinima,
+    super.dataAlteracao,
+  });
 
   factory EstoqueComInsumoModel.fromJson(Map<String, dynamic> json) {
     return EstoqueComInsumoModel(

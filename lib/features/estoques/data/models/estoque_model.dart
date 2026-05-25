@@ -2,18 +2,12 @@ import '../../domain/entities/estoque.dart';
 
 class EstoqueModel extends Estoque {
   const EstoqueModel({
-    required int id,
-    required int insumoId,
-    required double quantidadeDisponivel,
-    required double quantidadeMinima,
-    DateTime? dataAlteracao,
-  }) : super(
-    id: id,
-    insumoId: insumoId,
-    quantidadeDisponivel: quantidadeDisponivel,
-    quantidadeMinima: quantidadeMinima,
-    dataAlteracao: dataAlteracao,
-  );
+    required super.id,
+    required super.insumoId,
+    required super.quantidadeDisponivel,
+    required super.quantidadeMinima,
+    super.dataAlteracao,
+  });
 
   factory EstoqueModel.fromJson(Map<String, dynamic> json) {
     return EstoqueModel(
