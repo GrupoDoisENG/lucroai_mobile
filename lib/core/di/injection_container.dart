@@ -10,6 +10,14 @@ import '../../features/insumos/domain/usecases/get_insumos_usecase.dart';
 import '../../features/insumos/domain/usecases/toggle_insumo_ativo_usecase.dart';
 import '../../features/insumos/domain/usecases/update_insumo_usecase.dart';
 import '../../features/insumos/presentation/cubit/insumos_cubit.dart';
+import '../../features/estoques/data/datasources/estoque_remote_datasource.dart';
+import '../../features/estoques/data/repositories/estoque_repository_impl.dart';
+import '../../features/estoques/domain/repositories/estoque_repository.dart';
+import '../../features/estoques/domain/usecases/get_estoques_usecase.dart';
+import '../../features/estoques/domain/usecases/registrar_entrada_estoque_usecase.dart';
+import '../../features/estoques/domain/usecases/get_movimentacoes_usecase.dart';
+import '../../features/estoques/presentation/cubit/estoques_cubit.dart';
+import '../../features/auth/data/auth_remote_datasource.dart';
 import '../network/api_client.dart';
 
 final sl = GetIt.instance;
@@ -17,6 +25,9 @@ final sl = GetIt.instance;
 void initDependencies() {
   // External
   sl.registerLazySingleton<Dio>(() => ApiClient.create());
+
+  // Auth
+  sl.registerLazySingleton(() => AuthRemoteDatasource(dio: sl()));
 
   // Data sources
   sl.registerLazySingleton<InsumoRemoteDatasource>(
