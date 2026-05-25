@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 // Importando as páginas
 import '../../../features/insumos/presentation/pages/insumos_page.dart';
+import '../../../features/insumos/presentation/pages/calculo_real_screen.dart';
 import '../../../features/estoques/presentation/pages/estoques_page.dart';
 
 class MainScreen extends StatefulWidget {
@@ -21,7 +22,7 @@ class _MainScreenState extends State<MainScreen> {
     const Center(child: Text("Home - Em breve", style: TextStyle(color: Colors.white))),             // Índice 0
     const InsumosPage(),                                                                             // Índice 1 (A sua tela real!)
     const Center(child: Text("Receitas - Em breve", style: TextStyle(color: Colors.white))),         // Índice 2
-    const Center(child: Text("Cálculo Real - Em breve", style: TextStyle(color: Colors.white))),     // Índice 3
+    const CalculoRealScreen(),                                                                       // Índice 3
     const Center(child: Text("Vendas - Em breve", style: TextStyle(color: Colors.white))),           // Índice 4
     const EstoquesPage(),                                                                             // Índice 5
     const Center(child: Text("Simular - Em breve", style: TextStyle(color: Colors.white))),          // Índice 6
