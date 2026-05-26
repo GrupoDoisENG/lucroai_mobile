@@ -2,8 +2,14 @@ import 'package:dio/dio.dart';
 import 'api_constants.dart';
 
 class ApiClient {
+  static String? accessToken;
+
+  static void setAccessToken(String? token) {
+    accessToken = token;
+  }
+
   static Dio create() {
-    return Dio(
+    final dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
         connectTimeout: const Duration(seconds: 10),
@@ -11,5 +17,19 @@ class ApiClient {
         headers: {'Content-Type': 'application/json'},
       ),
     );
+
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final token = accessToken;
+          if (token != null && token.trim().isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          handler.next(options);
+        },
+      ),
+    );
+
+    return dio;
   }
 }
