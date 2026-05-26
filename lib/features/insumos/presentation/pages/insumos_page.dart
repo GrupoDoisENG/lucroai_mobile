@@ -391,7 +391,7 @@ class _EmptyView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inventory_2_outlined, size: 80, color: const Color(0xFFE85D33).withOpacity(0.5)),
+          Icon(Icons.inventory_2_outlined, size: 80, color: const Color(0xFFE85D33).withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           const Text('Nenhum insumo encontrado', style: TextStyle(color: Colors.white, fontSize: 18)),
           const SizedBox(height: 8),
