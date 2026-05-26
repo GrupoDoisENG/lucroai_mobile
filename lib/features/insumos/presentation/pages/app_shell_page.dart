@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection_container.dart';
+import '../../../custos/presentation/pages/custos_page.dart';
 import '../../../receitas/presentation/cubit/receitas_cubit.dart';
 import '../../../receitas/presentation/pages/receitas_page.dart';
 import '../widgets/app_bottom_nav.dart';
@@ -24,7 +25,7 @@ class _AppShellPageState extends State<AppShellPage> {
       create: (_) => sl<ReceitasCubit>(),
       child: const ReceitasPage(),
     ),
-    const _PlaceholderPage(title: 'Custos'),
+    const CustosPage(),
     const _PlaceholderPage(title: 'Vendas'),
     const _PlaceholderPage(title: 'Estoque'),
     const _PlaceholderPage(title: 'Simular'),
@@ -35,10 +36,7 @@ class _AppShellPageState extends State<AppShellPage> {
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: IndexedStack(
-          index: _currentIndex,
-          children: _pages,
-        ),
+        child: IndexedStack(index: _currentIndex, children: _pages),
       ),
       bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
