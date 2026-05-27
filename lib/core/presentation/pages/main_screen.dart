@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-// Importando a sua página oficial de insumos
+import '../../../features/estoques/presentation/pages/estoques_page.dart';
+import '../../../features/insumos/presentation/pages/calculo_real_screen.dart';
 import '../../../features/insumos/presentation/pages/insumos_page.dart';
 
 class MainScreen extends StatefulWidget {
@@ -11,19 +12,24 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // Começamos no índice 1, que é a aba de Insumos
   int _indiceAtual = 1;
 
-  // A lista de páginas. O IndexedStack vai exibir a página 
-  // correspondente ao número do _indiceAtual.
   final List<Widget> _paginas = [
-    const Center(child: Text("Home - Em breve", style: TextStyle(color: Colors.white))),             // Índice 0
-    const InsumosPage(),                                                                             // Índice 1 (A sua tela real!)
-    const Center(child: Text("Receitas - Em breve", style: TextStyle(color: Colors.white))),         // Índice 2
-    const Center(child: Text("Custos - Em breve", style: TextStyle(color: Colors.white))),           // Índice 3
-    const Center(child: Text("Vendas - Em breve", style: TextStyle(color: Colors.white))),           // Índice 4
-    const Center(child: Text("Estoque - Em breve", style: TextStyle(color: Colors.white))),          // Índice 5
-    const Center(child: Text("Simular - Em breve", style: TextStyle(color: Colors.white))),          // Índice 6
+    const Center(
+      child: Text('Home - Em breve', style: TextStyle(color: Colors.white)),
+    ),
+    const InsumosPage(),
+    const Center(
+      child: Text('Receitas - Em breve', style: TextStyle(color: Colors.white)),
+    ),
+    const CalculoRealScreen(),
+    const Center(
+      child: Text('Vendas - Em breve', style: TextStyle(color: Colors.white)),
+    ),
+    const EstoquesPage(),
+    const Center(
+      child: Text('Simular - Em breve', style: TextStyle(color: Colors.white)),
+    ),
   ];
 
   void _aoTocarNoMenu(int index) {
@@ -39,37 +45,78 @@ class _MainScreenState extends State<MainScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
-      // O IndexedStack mantém o estado de todas as telas vivo, 
-      // mas só exibe a que está selecionada no menu.
-      body: IndexedStack(
-        index: _indiceAtual,
-        children: _paginas,
-      ),
-      // Barra de navegação inferior fixa
+      body: IndexedStack(index: _indiceAtual, children: _paginas),
       bottomNavigationBar: Container(
         height: 65,
         color: const Color(0xFF050505),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildNavIcon(Icons.grid_view, "Home", 0, textSecondary, primaryOrange),
-            _buildNavIcon(Icons.inventory_2_outlined, "Insumos", 1, textSecondary, primaryOrange),
-            _buildNavIcon(Icons.restaurant_menu, "Receitas", 2, textSecondary, primaryOrange),
-            _buildNavIcon(Icons.calculate, "Custos", 3, textSecondary, primaryOrange),
-            _buildNavIcon(Icons.show_chart, "Vendas", 4, textSecondary, primaryOrange),
-            _buildNavIcon(Icons.inventory, "Estoque", 5, textSecondary, primaryOrange),
-            _buildNavIcon(Icons.science_outlined, "Simular", 6, textSecondary, primaryOrange),
+            _buildNavIcon(
+              Icons.grid_view,
+              'Home',
+              0,
+              textSecondary,
+              primaryOrange,
+            ),
+            _buildNavIcon(
+              Icons.inventory_2_outlined,
+              'Insumos',
+              1,
+              textSecondary,
+              primaryOrange,
+            ),
+            _buildNavIcon(
+              Icons.restaurant_menu,
+              'Receitas',
+              2,
+              textSecondary,
+              primaryOrange,
+            ),
+            _buildNavIcon(
+              Icons.calculate,
+              'Custos',
+              3,
+              textSecondary,
+              primaryOrange,
+            ),
+            _buildNavIcon(
+              Icons.show_chart,
+              'Vendas',
+              4,
+              textSecondary,
+              primaryOrange,
+            ),
+            _buildNavIcon(
+              Icons.inventory,
+              'Estoque',
+              5,
+              textSecondary,
+              primaryOrange,
+            ),
+            _buildNavIcon(
+              Icons.science_outlined,
+              'Simular',
+              6,
+              textSecondary,
+              primaryOrange,
+            ),
           ],
         ),
       ),
     );
   }
 
-  // Construtor dos botões do menu inferior
-  Widget _buildNavIcon(IconData icon, String label, int index, Color inactiveColor, Color activeColor) {
+  Widget _buildNavIcon(
+    IconData icon,
+    String label,
+    int index,
+    Color inactiveColor,
+    Color activeColor,
+  ) {
     final bool isActive = _indiceAtual == index;
     final color = isActive ? activeColor : inactiveColor;
-    
+
     return GestureDetector(
       onTap: () => _aoTocarNoMenu(index),
       behavior: HitTestBehavior.opaque,
