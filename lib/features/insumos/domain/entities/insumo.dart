@@ -1,109 +1,43 @@
-enum InsumoCategoria {
-  graos('graos'),
-  laticinios('laticinios'),
-  carnes('carnes'),
-  hortifruti('hortifruti'),
-  temperos('temperos'),
-  bebidas('bebidas'),
-  embalagens('embalagens'),
-  outros('outros');
-
-  const InsumoCategoria(this.value);
-
-  final String value;
-
-  String get label {
-    switch (this) {
-      case InsumoCategoria.graos:
-        return 'Grãos';
-      case InsumoCategoria.laticinios:
-        return 'Laticínios';
-      case InsumoCategoria.carnes:
-        return 'Carnes';
-      case InsumoCategoria.hortifruti:
-        return 'Hortifruti';
-      case InsumoCategoria.temperos:
-        return 'Temperos';
-      case InsumoCategoria.bebidas:
-        return 'Bebidas';
-      case InsumoCategoria.embalagens:
-        return 'Embalagens';
-      case InsumoCategoria.outros:
-        return 'Outros';
-    }
-  }
-
-  static InsumoCategoria fromValue(String value) {
-    return InsumoCategoria.values.firstWhere(
-      (e) => e.value == value,
-      orElse: () => InsumoCategoria.outros,
-    );
-  }
-}
-
 enum InsumoUnidadeMedida {
-  gramas('g'),
-  quilogramas('kg'),
-  mililitros('ml'),
-  litros('l'),
-  unidades('un'),
-  porcao('porcao');
+  gramas('G', 'g'),
+  quilogramas('KG', 'kg'),
+  mililitros('ML', 'ml'),
+  litros('L', 'l'),
+  unidades('UN', 'un');
 
-  const InsumoUnidadeMedida(this.value);
+  const InsumoUnidadeMedida(this.value, this.label);
 
   final String value;
-
-  String get label {
-    switch (this) {
-      case InsumoUnidadeMedida.gramas:
-        return 'g';
-      case InsumoUnidadeMedida.quilogramas:
-        return 'kg';
-      case InsumoUnidadeMedida.mililitros:
-        return 'ml';
-      case InsumoUnidadeMedida.litros:
-        return 'l';
-      case InsumoUnidadeMedida.unidades:
-        return 'un';
-      case InsumoUnidadeMedida.porcao:
-        return 'porção';
-    }
-  }
+  final String label;
 
   static InsumoUnidadeMedida fromValue(String value) {
+    final normalizedValue = value.trim().toUpperCase();
+
     return InsumoUnidadeMedida.values.firstWhere(
-      (e) => e.value == value,
+      (unidade) => unidade.value == normalizedValue,
       orElse: () => InsumoUnidadeMedida.unidades,
     );
   }
 }
 
 class Insumo {
-  final String id;
+  final int id;
+  final int empresaId;
   final String nome;
-  final String? descricao;
-  final InsumoCategoria categoria;
-  final InsumoUnidadeMedida unidadeMedida;
-  final double precoUnitario;
-  final double estoqueMinimo;
-  final bool ativo;
-  final DateTime criadoEm;
-  final DateTime atualizadoEm;
-  final double? quantidadeEmbalagem;
-  final double? precoEmbalagem;
+  final double quantidade;
+  final InsumoUnidadeMedida unidade;
+  final double valorPago;
+  final double custoUnitario;
+  final DateTime dataCriacao;
 
   const Insumo({
     required this.id,
+    required this.empresaId,
     required this.nome,
-    this.descricao,
-    required this.categoria,
-    required this.unidadeMedida,
-    required this.precoUnitario,
-    required this.estoqueMinimo,
-    required this.ativo,
-    required this.criadoEm,
-    required this.atualizadoEm,
-    this.quantidadeEmbalagem,
-    this.precoEmbalagem,
+    required this.quantidade,
+    required this.unidade,
+    required this.valorPago,
+    required this.custoUnitario,
+    required this.dataCriacao,
   });
 }

@@ -1,33 +1,32 @@
+import '../../../insumos/domain/entities/insumo.dart';
 import '../entities/receita.dart';
 
 abstract class ReceitaRepository {
-  Future<List<Receita>> getReceitas({
-    bool? ativo,
-    ReceitaCategoria? categoria,
-    String? search,
-  });
+  Future<List<Receita>> getReceitas({String? search});
 
-  Future<Receita> getReceita(String id);
+  Future<Receita> getReceita(int id);
 
   Future<Receita> createReceita({
+    required int empresaId,
     required String nome,
-    String? descricao,
-    required ReceitaCategoria categoria,
     required double rendimento,
-    required double custoTotal,
-    required double precoVenda,
+    required InsumoUnidadeMedida unidadeRendimento,
+    required double custoProducao,
+    required double custoUnitario,
+    required double margemLucro,
+    required double precoSugerido,
   });
 
   Future<Receita> updateReceita({
-    required String id,
+    required int id,
     String? nome,
-    String? descricao,
-    ReceitaCategoria? categoria,
     double? rendimento,
-    double? custoTotal,
-    double? precoVenda,
-    bool? ativo,
+    InsumoUnidadeMedida? unidadeRendimento,
+    double? custoProducao,
+    double? custoUnitario,
+    double? margemLucro,
+    double? precoSugerido,
   });
 
-  Future<void> deleteReceita(String id);
+  Future<void> deleteReceita(int id);
 }

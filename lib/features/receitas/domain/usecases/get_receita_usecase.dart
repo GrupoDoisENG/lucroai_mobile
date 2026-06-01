@@ -6,5 +6,5 @@ class GetReceitaUsecase {
 
   GetReceitaUsecase(this.repository);
 
-  Future<Receita> call(String id) => repository.getReceita(id);
+  Future<Receita> call(int id) => repository.getReceita(id);
 }

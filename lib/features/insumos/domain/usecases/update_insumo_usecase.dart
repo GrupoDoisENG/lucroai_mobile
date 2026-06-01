@@ -7,28 +7,18 @@ class UpdateInsumoUsecase {
   UpdateInsumoUsecase(this.repository);
 
   Future<Insumo> call({
-    required String id,
+    required int id,
     String? nome,
-    String? descricao,
-    InsumoCategoria? categoria,
-    InsumoUnidadeMedida? unidadeMedida,
-    double? precoUnitario,
-    double? estoqueMinimo,
-    bool? ativo,
-    double? quantidadeEmbalagem,
-    double? precoEmbalagem,
+    double? quantidade,
+    InsumoUnidadeMedida? unidade,
+    double? valorPago,
   }) {
     return repository.updateInsumo(
       id: id,
       nome: nome,
-      descricao: descricao,
-      categoria: categoria,
-      unidadeMedida: unidadeMedida,
-      precoUnitario: precoUnitario,
-      estoqueMinimo: estoqueMinimo,
-      ativo: ativo,
-      quantidadeEmbalagem: quantidadeEmbalagem,
-      precoEmbalagem: precoEmbalagem,
+      quantidade: quantidade,
+      unidade: unidade,
+      valorPago: valorPago,
     );
   }
 }

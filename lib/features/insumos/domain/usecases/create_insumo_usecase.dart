@@ -7,24 +7,18 @@ class CreateInsumoUsecase {
   CreateInsumoUsecase(this.repository);
 
   Future<Insumo> call({
+    required int empresaId,
     required String nome,
-    String? descricao,
-    required InsumoCategoria categoria,
-    required InsumoUnidadeMedida unidadeMedida,
-    required double precoUnitario,
-    required double estoqueMinimo,
-    double? quantidadeEmbalagem,
-    double? precoEmbalagem,
+    required double quantidade,
+    required InsumoUnidadeMedida unidade,
+    required double valorPago,
   }) {
     return repository.createInsumo(
+      empresaId: empresaId,
       nome: nome,
-      descricao: descricao,
-      categoria: categoria,
-      unidadeMedida: unidadeMedida,
-      precoUnitario: precoUnitario,
-      estoqueMinimo: estoqueMinimo,
-      quantidadeEmbalagem: quantidadeEmbalagem,
-      precoEmbalagem: precoEmbalagem,
+      quantidade: quantidade,
+      unidade: unidade,
+      valorPago: valorPago,
     );
   }
 }

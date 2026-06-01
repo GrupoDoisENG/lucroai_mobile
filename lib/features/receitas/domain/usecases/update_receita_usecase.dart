@@ -1,3 +1,4 @@
+import '../../../insumos/domain/entities/insumo.dart';
 import '../entities/receita.dart';
 import '../repositories/receita_repository.dart';
 
@@ -7,24 +8,24 @@ class UpdateReceitaUsecase {
   UpdateReceitaUsecase(this.repository);
 
   Future<Receita> call({
-    required String id,
+    required int id,
     String? nome,
-    String? descricao,
-    ReceitaCategoria? categoria,
     double? rendimento,
-    double? custoTotal,
-    double? precoVenda,
-    bool? ativo,
+    InsumoUnidadeMedida? unidadeRendimento,
+    double? custoProducao,
+    double? custoUnitario,
+    double? margemLucro,
+    double? precoSugerido,
   }) {
     return repository.updateReceita(
       id: id,
       nome: nome,
-      descricao: descricao,
-      categoria: categoria,
       rendimento: rendimento,
-      custoTotal: custoTotal,
-      precoVenda: precoVenda,
-      ativo: ativo,
+      unidadeRendimento: unidadeRendimento,
+      custoProducao: custoProducao,
+      custoUnitario: custoUnitario,
+      margemLucro: margemLucro,
+      precoSugerido: precoSugerido,
     );
   }
 }

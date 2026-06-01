@@ -1,11 +1,6 @@
 import '../../domain/entities/insumo.dart';
 
-enum InsumosStatus {
-  initial,
-  loading,
-  success,
-  error,
-}
+enum InsumosStatus { initial, loading, success, error }
 
 class InsumosState {
   final InsumosStatus status;
@@ -34,7 +29,9 @@ class InsumosState {
       status: status ?? this.status,
       insumos: insumos ?? this.insumos,
       search: search ?? this.search,
-      errorMessage: clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
+      errorMessage: clearErrorMessage
+          ? null
+          : (errorMessage ?? this.errorMessage),
       isSubmitting: isSubmitting ?? this.isSubmitting,
     );
   }
