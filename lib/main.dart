@@ -8,6 +8,8 @@ import 'features/auth/data/auth_remote_datasource.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/estoques/presentation/cubit/estoques_cubit.dart';
 import 'features/insumos/presentation/cubit/insumos_cubit.dart';
+import 'features/receitas/presentation/cubit/receitas_cubit.dart';
+import 'features/vendas/presentation/cubit/vendas_cubit.dart';
 
 void main() {
   initDependencies();
@@ -24,8 +26,8 @@ class LucroAiApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFF050505),
         brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF050505),
         colorScheme: const ColorScheme.dark(
           primary: Color(0xFFFF6B3D),
           secondary: Color(0xFFFF6B3D),
@@ -50,7 +52,9 @@ class _AuthGateState extends State<AuthGate> {
       email: email,
       senha: senha,
     );
+
     AuthSession.start(token);
+
     if (mounted) {
       setState(() {});
     }
@@ -65,6 +69,8 @@ class _AuthGateState extends State<AuthGate> {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => sl<InsumosCubit>()),
+        BlocProvider(create: (_) => sl<ReceitasCubit>()),
+        BlocProvider(create: (_) => sl<VendasCubit>()),
         BlocProvider(create: (_) => sl<EstoquesCubit>()),
       ],
       child: const MainScreen(),

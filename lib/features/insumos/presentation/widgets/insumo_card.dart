@@ -16,8 +16,6 @@ class InsumoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = _buildSubtitle(insumo);
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -27,9 +25,7 @@ class InsumoCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFF101010),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: const Color(0xFF1A1A1A),
-            ),
+            border: Border.all(color: const Color(0xFF1A1A1A)),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -42,9 +38,7 @@ class InsumoCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFF151515),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: const Color(0xFF242424),
-                    ),
+                    border: Border.all(color: const Color(0xFF242424)),
                   ),
                   child: const Icon(
                     Icons.inventory_2_outlined,
@@ -71,7 +65,7 @@ class InsumoCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          subtitle,
+                          '${_formatNumber(insumo.quantidade)} ${insumo.unidade.label} - ${_formatCurrency(insumo.valorPago)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -89,8 +83,8 @@ class InsumoCard extends StatelessWidget {
                   children: [
                     Text(
                       _formatUnitPrice(
-                        insumo.precoUnitario,
-                        insumo.unidadeMedida.label,
+                        insumo.custoUnitario,
+                        insumo.unidade.label,
                       ),
                       style: const TextStyle(
                         color: Color(0xFFFF6B3D),
@@ -121,18 +115,6 @@ class InsumoCard extends StatelessWidget {
     );
   }
 
-  static String _buildSubtitle(Insumo insumo) {
-    if (insumo.quantidadeEmbalagem != null && insumo.precoEmbalagem != null) {
-      return '${_formatNumber(insumo.quantidadeEmbalagem!)} ${insumo.unidadeMedida.label} - ${_formatCurrency(insumo.precoEmbalagem!)}';
-    }
-
-    if (insumo.descricao != null && insumo.descricao!.trim().isNotEmpty) {
-      return insumo.descricao!;
-    }
-
-    return 'Estoque mín. ${_formatNumber(insumo.estoqueMinimo)} ${insumo.unidadeMedida.label}';
-  }
-
   static String _formatCurrency(double value) {
     return 'R\$ ${_formatNumber(value, decimals: 2)}';
   }
@@ -146,7 +128,7 @@ class InsumoCard extends StatelessWidget {
     final parts = fixed.split('.');
 
     final integer = parts[0];
-    String decimal = parts.length > 1 ? parts[1] : '';
+    var decimal = parts.length > 1 ? parts[1] : '';
 
     if (decimals > 2) {
       decimal = decimal.replaceFirst(RegExp(r'0+$'), '');

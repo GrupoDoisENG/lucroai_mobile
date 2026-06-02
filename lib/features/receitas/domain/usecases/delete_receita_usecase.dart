@@ -5,5 +5,5 @@ class DeleteReceitaUsecase {
 
   DeleteReceitaUsecase(this.repository);
 
-  Future<void> call(String id) => repository.deleteReceita(id);
+  Future<void> call(int id) => repository.deleteReceita(id);
 }

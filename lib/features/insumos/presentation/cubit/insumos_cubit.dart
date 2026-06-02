@@ -6,7 +6,6 @@ import '../../domain/entities/insumo.dart';
 import '../../domain/usecases/create_insumo_usecase.dart';
 import '../../domain/usecases/delete_insumo_usecase.dart';
 import '../../domain/usecases/get_insumos_usecase.dart';
-import '../../domain/usecases/toggle_insumo_ativo_usecase.dart';
 import '../../domain/usecases/update_insumo_usecase.dart';
 import 'insumos_state.dart';
 
@@ -15,7 +14,6 @@ class InsumosCubit extends Cubit<InsumosState> {
   final CreateInsumoUsecase createInsumoUsecase;
   final UpdateInsumoUsecase updateInsumoUsecase;
   final DeleteInsumoUsecase deleteInsumoUsecase;
-  final ToggleInsumoAtivoUsecase toggleInsumoAtivoUsecase;
 
   Timer? _debounce;
 
@@ -24,7 +22,6 @@ class InsumosCubit extends Cubit<InsumosState> {
     required this.createInsumoUsecase,
     required this.updateInsumoUsecase,
     required this.deleteInsumoUsecase,
-    required this.toggleInsumoAtivoUsecase,
   }) : super(const InsumosState());
 
   Future<void> loadInsumos({String? search, bool showLoader = true}) async {
@@ -38,18 +35,12 @@ class InsumosCubit extends Cubit<InsumosState> {
       );
     } else {
       emit(
-        state.copyWith(
-          search: search ?? state.search,
-          clearErrorMessage: true,
-        ),
+        state.copyWith(search: search ?? state.search, clearErrorMessage: true),
       );
     }
 
     try {
-      final result = await getInsumosUsecase(
-        search: search ?? state.search,
-        ativo: true,
-      );
+      final result = await getInsumosUsecase(search: search ?? state.search);
 
       emit(
         state.copyWith(
@@ -61,10 +52,7 @@ class InsumosCubit extends Cubit<InsumosState> {
       );
     } catch (e) {
       emit(
-        state.copyWith(
-          status: InsumosStatus.error,
-          errorMessage: e.toString(),
-        ),
+        state.copyWith(status: InsumosStatus.error, errorMessage: e.toString()),
       );
     }
   }
@@ -78,27 +66,21 @@ class InsumosCubit extends Cubit<InsumosState> {
   }
 
   Future<void> createInsumo({
+    required int empresaId,
     required String nome,
-    String? descricao,
-    required InsumoCategoria categoria,
-    required InsumoUnidadeMedida unidadeMedida,
-    required double precoUnitario,
-    required double estoqueMinimo,
-    double? quantidadeEmbalagem,
-    double? precoEmbalagem,
+    required double quantidade,
+    required InsumoUnidadeMedida unidade,
+    required double valorPago,
   }) async {
     emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
 
     try {
       await createInsumoUsecase(
+        empresaId: empresaId,
         nome: nome,
-        descricao: descricao,
-        categoria: categoria,
-        unidadeMedida: unidadeMedida,
-        precoUnitario: precoUnitario,
-        estoqueMinimo: estoqueMinimo,
-        quantidadeEmbalagem: quantidadeEmbalagem,
-        precoEmbalagem: precoEmbalagem,
+        quantidade: quantidade,
+        unidade: unidade,
+        valorPago: valorPago,
       );
 
       emit(state.copyWith(isSubmitting: false));
@@ -115,16 +97,11 @@ class InsumosCubit extends Cubit<InsumosState> {
   }
 
   Future<void> updateInsumo({
-    required String id,
+    required int id,
     String? nome,
-    String? descricao,
-    InsumoCategoria? categoria,
-    InsumoUnidadeMedida? unidadeMedida,
-    double? precoUnitario,
-    double? estoqueMinimo,
-    bool? ativo,
-    double? quantidadeEmbalagem,
-    double? precoEmbalagem,
+    double? quantidade,
+    InsumoUnidadeMedida? unidade,
+    double? valorPago,
   }) async {
     emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
 
@@ -132,14 +109,9 @@ class InsumosCubit extends Cubit<InsumosState> {
       await updateInsumoUsecase(
         id: id,
         nome: nome,
-        descricao: descricao,
-        categoria: categoria,
-        unidadeMedida: unidadeMedida,
-        precoUnitario: precoUnitario,
-        estoqueMinimo: estoqueMinimo,
-        ativo: ativo,
-        quantidadeEmbalagem: quantidadeEmbalagem,
-        precoEmbalagem: precoEmbalagem,
+        quantidade: quantidade,
+        unidade: unidade,
+        valorPago: valorPago,
       );
 
       emit(state.copyWith(isSubmitting: false));
@@ -155,29 +127,11 @@ class InsumosCubit extends Cubit<InsumosState> {
     }
   }
 
-  Future<void> deleteInsumo(String id) async {
+  Future<void> deleteInsumo(int id) async {
     emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
 
     try {
       await deleteInsumoUsecase(id);
-      emit(state.copyWith(isSubmitting: false));
-      await loadInsumos(search: state.search, showLoader: false);
-    } catch (e) {
-      emit(
-        state.copyWith(
-          isSubmitting: false,
-          errorMessage: e.toString(),
-          status: InsumosStatus.error,
-        ),
-      );
-    }
-  }
-
-  Future<void> toggleAtivo(String id, bool ativo) async {
-    emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
-
-    try {
-      await toggleInsumoAtivoUsecase(id, ativo);
       emit(state.copyWith(isSubmitting: false));
       await loadInsumos(search: state.search, showLoader: false);
     } catch (e) {

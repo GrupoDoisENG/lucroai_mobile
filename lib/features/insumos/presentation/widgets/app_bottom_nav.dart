@@ -25,12 +25,7 @@ class AppBottomNav extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: Color(0xFF050505),
-        border: Border(
-          top: BorderSide(
-            color: Color(0xFF171717),
-            width: 1,
-          ),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFF171717), width: 1)),
       ),
       padding: const EdgeInsets.fromLTRB(6, 10, 6, 12),
       child: SafeArea(
@@ -87,8 +82,5 @@ class _NavItemData {
   final String label;
   final IconData icon;
 
-  const _NavItemData({
-    required this.label,
-    required this.icon,
-  });
+  const _NavItemData({required this.label, required this.icon});
 }

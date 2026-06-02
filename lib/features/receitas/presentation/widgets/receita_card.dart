@@ -16,8 +16,6 @@ class ReceitaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = _buildSubtitle(receita);
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -67,7 +65,7 @@ class ReceitaCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          subtitle,
+                          '${_formatNumber(receita.rendimento)} ${receita.unidadeRendimento.label} - custo ${_formatCurrency(receita.custoProducao)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -84,14 +82,22 @@ class ReceitaCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      _formatCurrency(receita.precoVenda),
+                      _formatCurrency(receita.precoSugerido),
                       style: const TextStyle(
                         color: Color(0xFFFF6B3D),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${_formatNumber(receita.margemLucro * 100, decimals: 1)}%',
+                      style: const TextStyle(
+                        color: Color(0xFF858585),
+                        fontSize: 10.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     InkWell(
                       onTap: onDelete,
                       borderRadius: BorderRadius.circular(20),
@@ -112,19 +118,6 @@ class ReceitaCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static String _buildSubtitle(Receita receita) {
-    final margem = receita.precoVenda <= 0
-        ? 0.0
-        : ((receita.precoVenda - receita.custoTotal) / receita.precoVenda) *
-              100;
-
-    if (receita.descricao != null && receita.descricao!.trim().isNotEmpty) {
-      return receita.descricao!;
-    }
-
-    return '${receita.categoria.label} - ${_formatNumber(receita.rendimento)} porcoes - margem ${_formatNumber(margem, decimals: 1)}%';
   }
 
   static String _formatCurrency(double value) {

@@ -5,6 +5,8 @@ import '../../../../core/di/injection_container.dart';
 import '../../../custos/presentation/pages/custos_page.dart';
 import '../../../receitas/presentation/cubit/receitas_cubit.dart';
 import '../../../receitas/presentation/pages/receitas_page.dart';
+import '../../../vendas/presentation/cubit/vendas_cubit.dart';
+import '../../../vendas/presentation/pages/vendas_page.dart';
 import '../widgets/app_bottom_nav.dart';
 import 'insumos_page.dart';
 
@@ -26,7 +28,7 @@ class _AppShellPageState extends State<AppShellPage> {
       child: const ReceitasPage(),
     ),
     const CustosPage(),
-    const _PlaceholderPage(title: 'Vendas'),
+    BlocProvider(create: (_) => sl<VendasCubit>(), child: const VendasPage()),
     const _PlaceholderPage(title: 'Estoque'),
     const _PlaceholderPage(title: 'Simular'),
   ];

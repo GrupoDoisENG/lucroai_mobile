@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../insumos/domain/entities/insumo.dart';
 import '../../domain/entities/receita.dart';
 import '../cubit/receitas_cubit.dart';
 import '../cubit/receitas_state.dart';
@@ -36,21 +37,28 @@ class _ReceitasPageState extends State<ReceitasPage> {
   }
 
   Future<void> _openFormDialog({Receita? receita}) async {
-    final nomeController = TextEditingController(text: receita?.nome ?? '');
-    final descricaoController = TextEditingController(
-      text: receita?.descricao ?? '',
+    final empresaIdController = TextEditingController(
+      text: (receita?.empresaId ?? 1).toString(),
     );
+    final nomeController = TextEditingController(text: receita?.nome ?? '');
     final rendimentoController = TextEditingController(
       text: receita?.rendimento.toString() ?? '',
     );
-    final custoTotalController = TextEditingController(
-      text: receita?.custoTotal.toString() ?? '',
+    final custoProducaoController = TextEditingController(
+      text: receita?.custoProducao.toString() ?? '',
     );
-    final precoVendaController = TextEditingController(
-      text: receita?.precoVenda.toString() ?? '',
+    final custoUnitarioController = TextEditingController(
+      text: receita?.custoUnitario.toString() ?? '',
+    );
+    final margemLucroController = TextEditingController(
+      text: receita == null ? '' : (receita.margemLucro * 100).toString(),
+    );
+    final precoSugeridoController = TextEditingController(
+      text: receita?.precoSugerido.toString() ?? '',
     );
 
-    ReceitaCategoria categoria = receita?.categoria ?? ReceitaCategoria.outros;
+    InsumoUnidadeMedida unidadeRendimento =
+        receita?.unidadeRendimento ?? InsumoUnidadeMedida.unidades;
     final formKey = GlobalKey<FormState>();
 
     await showDialog<void>(
@@ -82,6 +90,21 @@ class _ReceitasPageState extends State<ReceitasPage> {
                           ),
                         ),
                         const SizedBox(height: 16),
+                        if (receita == null) ...[
+                          _buildInput(
+                            controller: empresaIdController,
+                            label: 'Empresa ID',
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              final empresaId = int.tryParse(value ?? '');
+                              if (empresaId == null || empresaId <= 0) {
+                                return 'Informe o ID da empresa';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                         _buildInput(
                           controller: nomeController,
                           label: 'Nome',
@@ -93,72 +116,108 @@ class _ReceitasPageState extends State<ReceitasPage> {
                           },
                         ),
                         const SizedBox(height: 12),
-                        _buildInput(
-                          controller: descricaoController,
-                          label: 'Descricao',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildDropdown<ReceitaCategoria>(
-                          label: 'Categoria',
-                          value: categoria,
-                          items: ReceitaCategoria.values,
-                          itemLabel: (item) => item.label,
-                          onChanged: (value) {
-                            if (value != null) {
-                              setModalState(() {
-                                categoria = value;
-                              });
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        _buildInput(
-                          controller: rendimentoController,
-                          label: 'Rendimento',
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Informe o rendimento';
-                            }
-                            return null;
-                          },
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildInput(
+                                controller: rendimentoController,
+                                label: 'Rendimento',
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                validator: (value) => _validatePositiveNumber(
+                                  value,
+                                  'Obrigatorio',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _buildDropdown<InsumoUnidadeMedida>(
+                                label: 'Unidade',
+                                value: unidadeRendimento,
+                                items: InsumoUnidadeMedida.values,
+                                itemLabel: (item) => item.label,
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setModalState(() {
+                                      unidadeRendimento = value;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 12),
                         Row(
                           children: [
                             Expanded(
                               child: _buildInput(
-                                controller: custoTotalController,
-                                label: 'Custo total',
+                                controller: custoProducaoController,
+                                label: 'Custo producao',
                                 keyboardType:
                                     const TextInputType.numberWithOptions(
                                       decimal: true,
                                     ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Obrigatorio';
-                                  }
-                                  return null;
-                                },
+                                validator: (value) =>
+                                    _validateNonNegativeNumber(
+                                      value,
+                                      'Obrigatorio',
+                                    ),
                               ),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: _buildInput(
-                                controller: precoVendaController,
-                                label: 'Preco venda',
+                                controller: custoUnitarioController,
+                                label: 'Custo unitario',
                                 keyboardType:
                                     const TextInputType.numberWithOptions(
                                       decimal: true,
                                     ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Obrigatorio';
-                                  }
-                                  return null;
-                                },
+                                validator: (value) =>
+                                    _validateNonNegativeNumber(
+                                      value,
+                                      'Obrigatorio',
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildInput(
+                                controller: margemLucroController,
+                                label: 'Margem lucro (%)',
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                validator: (value) =>
+                                    _validateNonNegativeNumber(
+                                      value,
+                                      'Obrigatorio',
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _buildInput(
+                                controller: precoSugeridoController,
+                                label: 'Preco sugerido',
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                validator: (value) =>
+                                    _validateNonNegativeNumber(
+                                      value,
+                                      'Obrigatorio',
+                                    ),
                               ),
                             ),
                           ],
@@ -191,47 +250,62 @@ class _ReceitasPageState extends State<ReceitasPage> {
                                     return;
                                   }
 
+                                  final navigator = Navigator.of(dialogContext);
                                   final cubit = context.read<ReceitasCubit>();
                                   final nome = nomeController.text.trim();
-                                  final descricao = descricaoController.text
-                                      .trim();
                                   final rendimento =
                                       _parseDouble(rendimentoController.text) ??
                                       0;
-                                  final custoTotal =
-                                      _parseDouble(custoTotalController.text) ??
+                                  final custoProducao =
+                                      _parseDouble(
+                                        custoProducaoController.text,
+                                      ) ??
                                       0;
-                                  final precoVenda =
-                                      _parseDouble(precoVendaController.text) ??
+                                  final custoUnitario =
+                                      _parseDouble(
+                                        custoUnitarioController.text,
+                                      ) ??
+                                      0;
+                                  final margemLucro =
+                                      (_parseDouble(
+                                            margemLucroController.text,
+                                          ) ??
+                                          0) /
+                                      100;
+                                  final precoSugerido =
+                                      _parseDouble(
+                                        precoSugeridoController.text,
+                                      ) ??
                                       0;
 
                                   if (receita == null) {
                                     await cubit.createReceita(
+                                      empresaId: int.parse(
+                                        empresaIdController.text.trim(),
+                                      ),
                                       nome: nome,
-                                      descricao: descricao.isEmpty
-                                          ? null
-                                          : descricao,
-                                      categoria: categoria,
                                       rendimento: rendimento,
-                                      custoTotal: custoTotal,
-                                      precoVenda: precoVenda,
+                                      unidadeRendimento: unidadeRendimento,
+                                      custoProducao: custoProducao,
+                                      custoUnitario: custoUnitario,
+                                      margemLucro: margemLucro,
+                                      precoSugerido: precoSugerido,
                                     );
                                   } else {
                                     await cubit.updateReceita(
                                       id: receita.id,
                                       nome: nome,
-                                      descricao: descricao.isEmpty
-                                          ? null
-                                          : descricao,
-                                      categoria: categoria,
                                       rendimento: rendimento,
-                                      custoTotal: custoTotal,
-                                      precoVenda: precoVenda,
+                                      unidadeRendimento: unidadeRendimento,
+                                      custoProducao: custoProducao,
+                                      custoUnitario: custoUnitario,
+                                      margemLucro: margemLucro,
+                                      precoSugerido: precoSugerido,
                                     );
                                   }
 
                                   if (dialogContext.mounted) {
-                                    Navigator.of(dialogContext).pop();
+                                    navigator.pop();
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
@@ -261,11 +335,13 @@ class _ReceitasPageState extends State<ReceitasPage> {
       },
     );
 
+    empresaIdController.dispose();
     nomeController.dispose();
-    descricaoController.dispose();
     rendimentoController.dispose();
-    custoTotalController.dispose();
-    precoVendaController.dispose();
+    custoProducaoController.dispose();
+    custoUnitarioController.dispose();
+    margemLucroController.dispose();
+    precoSugeridoController.dispose();
   }
 
   Future<void> _confirmDelete(Receita receita) async {
@@ -346,7 +422,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Gerencie suas receitas e margens',
+                    'Gerencie rendimento, custos, margem e preco sugerido',
                     style: TextStyle(color: Color(0xFF7C7C7C), fontSize: 12.5),
                   ),
                   const SizedBox(height: 18),
@@ -482,6 +558,18 @@ class _ReceitasPageState extends State<ReceitasPage> {
           )
           .toList(),
     );
+  }
+
+  String? _validatePositiveNumber(String? value, String message) {
+    final parsed = _parseDouble(value ?? '');
+    if (parsed == null || parsed <= 0) return message;
+    return null;
+  }
+
+  String? _validateNonNegativeNumber(String? value, String message) {
+    final parsed = _parseDouble(value ?? '');
+    if (parsed == null || parsed < 0) return message;
+    return null;
   }
 
   double? _parseDouble(String value) {

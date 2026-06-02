@@ -1,3 +1,4 @@
+import '../../../insumos/domain/entities/insumo.dart';
 import '../../domain/entities/receita.dart';
 import '../../domain/repositories/receita_repository.dart';
 import '../datasources/receita_remote_datasource.dart';
@@ -9,67 +10,63 @@ class ReceitaRepositoryImpl implements ReceitaRepository {
   ReceitaRepositoryImpl({required this.datasource});
 
   @override
-  Future<List<Receita>> getReceitas({
-    bool? ativo,
-    ReceitaCategoria? categoria,
-    String? search,
-  }) {
-    return datasource.getReceitas(
-      ativo: ativo,
-      categoria: categoria,
-      search: search,
-    );
+  Future<List<Receita>> getReceitas({String? search}) {
+    return datasource.getReceitas(search: search);
   }
 
   @override
-  Future<Receita> getReceita(String id) => datasource.getReceita(id);
+  Future<Receita> getReceita(int id) => datasource.getReceita(id);
 
   @override
   Future<Receita> createReceita({
+    required int empresaId,
     required String nome,
-    String? descricao,
-    required ReceitaCategoria categoria,
     required double rendimento,
-    required double custoTotal,
-    required double precoVenda,
+    required InsumoUnidadeMedida unidadeRendimento,
+    required double custoProducao,
+    required double custoUnitario,
+    required double margemLucro,
+    required double precoSugerido,
   }) {
     return datasource.createReceita(
       ReceitaModel.toJsonCreate(
+        empresaId: empresaId,
         nome: nome,
-        descricao: descricao,
-        categoria: categoria,
         rendimento: rendimento,
-        custoTotal: custoTotal,
-        precoVenda: precoVenda,
+        unidadeRendimento: unidadeRendimento,
+        custoProducao: custoProducao,
+        custoUnitario: custoUnitario,
+        margemLucro: margemLucro,
+        precoSugerido: precoSugerido,
       ),
     );
   }
 
   @override
   Future<Receita> updateReceita({
-    required String id,
+    required int id,
     String? nome,
-    String? descricao,
-    ReceitaCategoria? categoria,
     double? rendimento,
-    double? custoTotal,
-    double? precoVenda,
-    bool? ativo,
+    InsumoUnidadeMedida? unidadeRendimento,
+    double? custoProducao,
+    double? custoUnitario,
+    double? margemLucro,
+    double? precoSugerido,
   }) {
     return datasource.updateReceita(
       id,
       ReceitaModel.toJsonUpdate(
         nome: nome,
-        descricao: descricao,
-        categoria: categoria,
         rendimento: rendimento,
-        custoTotal: custoTotal,
-        precoVenda: precoVenda,
-        ativo: ativo,
+        unidadeRendimento: unidadeRendimento,
+        custoProducao: custoProducao,
+        custoUnitario: custoUnitario,
+        margemLucro: margemLucro,
+        precoSugerido: precoSugerido,
       ),
     );
   }
 
   @override
-  Future<void> deleteReceita(String id) => datasource.deleteReceita(id);
+  Future<void> deleteReceita(int id) => datasource.deleteReceita(id);
 }

@@ -22,17 +22,12 @@ class InsumosSearchBar extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF131313),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: const Color(0xFF1D1D1D),
-              ),
+              border: Border.all(color: const Color(0xFF1D1D1D)),
             ),
             child: TextField(
               controller: controller,
               onChanged: onChanged,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: const InputDecoration(
                 prefixIcon: Icon(
                   Icons.search,
@@ -40,10 +35,7 @@ class InsumosSearchBar extends StatelessWidget {
                   size: 20,
                 ),
                 hintText: 'Buscar insumo...',
-                hintStyle: TextStyle(
-                  color: Color(0xFF6F6F6F),
-                  fontSize: 13,
-                ),
+                hintStyle: TextStyle(color: Color(0xFF6F6F6F), fontSize: 13),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(vertical: 12),
               ),

@@ -2,11 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../domain/entities/receita.dart';
+import '../../../insumos/domain/entities/insumo.dart';
 import '../../domain/usecases/create_receita_usecase.dart';
 import '../../domain/usecases/delete_receita_usecase.dart';
 import '../../domain/usecases/get_receitas_usecase.dart';
-import '../../domain/usecases/toggle_receita_ativo_usecase.dart';
 import '../../domain/usecases/update_receita_usecase.dart';
 import 'receitas_state.dart';
 
@@ -15,7 +14,6 @@ class ReceitasCubit extends Cubit<ReceitasState> {
   final CreateReceitaUsecase createReceitaUsecase;
   final UpdateReceitaUsecase updateReceitaUsecase;
   final DeleteReceitaUsecase deleteReceitaUsecase;
-  final ToggleReceitaAtivoUsecase toggleReceitaAtivoUsecase;
 
   Timer? _debounce;
 
@@ -24,7 +22,6 @@ class ReceitasCubit extends Cubit<ReceitasState> {
     required this.createReceitaUsecase,
     required this.updateReceitaUsecase,
     required this.deleteReceitaUsecase,
-    required this.toggleReceitaAtivoUsecase,
   }) : super(const ReceitasState());
 
   Future<void> loadReceitas({String? search, bool showLoader = true}) async {
@@ -43,10 +40,7 @@ class ReceitasCubit extends Cubit<ReceitasState> {
     }
 
     try {
-      final result = await getReceitasUsecase(
-        search: search ?? state.search,
-        ativo: true,
-      );
+      final result = await getReceitasUsecase(search: search ?? state.search);
 
       emit(
         state.copyWith(
@@ -75,23 +69,27 @@ class ReceitasCubit extends Cubit<ReceitasState> {
   }
 
   Future<void> createReceita({
+    required int empresaId,
     required String nome,
-    String? descricao,
-    required ReceitaCategoria categoria,
     required double rendimento,
-    required double custoTotal,
-    required double precoVenda,
+    required InsumoUnidadeMedida unidadeRendimento,
+    required double custoProducao,
+    required double custoUnitario,
+    required double margemLucro,
+    required double precoSugerido,
   }) async {
     emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
 
     try {
       await createReceitaUsecase(
+        empresaId: empresaId,
         nome: nome,
-        descricao: descricao,
-        categoria: categoria,
         rendimento: rendimento,
-        custoTotal: custoTotal,
-        precoVenda: precoVenda,
+        unidadeRendimento: unidadeRendimento,
+        custoProducao: custoProducao,
+        custoUnitario: custoUnitario,
+        margemLucro: margemLucro,
+        precoSugerido: precoSugerido,
       );
 
       emit(state.copyWith(isSubmitting: false));
@@ -108,14 +106,14 @@ class ReceitasCubit extends Cubit<ReceitasState> {
   }
 
   Future<void> updateReceita({
-    required String id,
+    required int id,
     String? nome,
-    String? descricao,
-    ReceitaCategoria? categoria,
     double? rendimento,
-    double? custoTotal,
-    double? precoVenda,
-    bool? ativo,
+    InsumoUnidadeMedida? unidadeRendimento,
+    double? custoProducao,
+    double? custoUnitario,
+    double? margemLucro,
+    double? precoSugerido,
   }) async {
     emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
 
@@ -123,12 +121,12 @@ class ReceitasCubit extends Cubit<ReceitasState> {
       await updateReceitaUsecase(
         id: id,
         nome: nome,
-        descricao: descricao,
-        categoria: categoria,
         rendimento: rendimento,
-        custoTotal: custoTotal,
-        precoVenda: precoVenda,
-        ativo: ativo,
+        unidadeRendimento: unidadeRendimento,
+        custoProducao: custoProducao,
+        custoUnitario: custoUnitario,
+        margemLucro: margemLucro,
+        precoSugerido: precoSugerido,
       );
 
       emit(state.copyWith(isSubmitting: false));
@@ -144,29 +142,11 @@ class ReceitasCubit extends Cubit<ReceitasState> {
     }
   }
 
-  Future<void> deleteReceita(String id) async {
+  Future<void> deleteReceita(int id) async {
     emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
 
     try {
       await deleteReceitaUsecase(id);
-      emit(state.copyWith(isSubmitting: false));
-      await loadReceitas(search: state.search, showLoader: false);
-    } catch (e) {
-      emit(
-        state.copyWith(
-          isSubmitting: false,
-          errorMessage: e.toString(),
-          status: ReceitasStatus.error,
-        ),
-      );
-    }
-  }
-
-  Future<void> toggleAtivo(String id, bool ativo) async {
-    emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
-
-    try {
-      await toggleReceitaAtivoUsecase(id, ativo);
       emit(state.copyWith(isSubmitting: false));
       await loadReceitas(search: state.search, showLoader: false);
     } catch (e) {
