@@ -1,23 +1,21 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
+
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/api_constants.dart';
-import '../../domain/entities/insumo.dart';
 import '../models/insumo_model.dart';
 
 abstract class InsumoRemoteDatasource {
-  Future<List<InsumoModel>> getInsumos({
-    bool? ativo,
-    InsumoCategoria? categoria,
-    String? search,
-  });
+  Future<List<InsumoModel>> getInsumos({String? search});
 
-  Future<InsumoModel> getInsumo(String id);
+  Future<InsumoModel> getInsumo(int id);
 
   Future<InsumoModel> createInsumo(Map<String, dynamic> data);
 
-  Future<InsumoModel> updateInsumo(String id, Map<String, dynamic> data);
+  Future<InsumoModel> updateInsumo(int id, Map<String, dynamic> data);
 
-  Future<void> deleteInsumo(String id);
+  Future<void> deleteInsumo(int id);
 }
 
 class InsumoRemoteDatasourceImpl implements InsumoRemoteDatasource {
@@ -26,33 +24,41 @@ class InsumoRemoteDatasourceImpl implements InsumoRemoteDatasource {
   InsumoRemoteDatasourceImpl({required this.dio});
 
   @override
-  Future<List<InsumoModel>> getInsumos({
-    bool? ativo,
-    InsumoCategoria? categoria,
-    String? search,
-  }) async {
+  Future<List<InsumoModel>> getInsumos({String? search}) async {
     try {
-      final queryParams = <String, dynamic>{};
-      if (ativo != null) queryParams['ativo'] = ativo;
-      if (categoria != null) queryParams['categoria'] = categoria.value;
-      if (search != null && search.isNotEmpty) queryParams['search'] = search;
-
       final response = await dio.get(ApiConstants.insumos);
+      final data = _extractInsumosList(response.data);
 
-      final data = response.data as List<dynamic>;
-      return data
-          .map((json) => InsumoModel.fromJson(json as Map<String, dynamic>))
+      final insumos = data
+          .map((json) => InsumoModel.fromJson(Map<String, dynamic>.from(json)))
+          .toList();
+
+      if (search == null || search.trim().isEmpty) {
+        return insumos;
+      }
+
+      final normalizedSearch = search.trim().toLowerCase();
+      return insumos
+          .where(
+            (insumo) => insumo.nome.toLowerCase().contains(normalizedSearch),
+          )
           .toList();
     } on DioException catch (e) {
       throw _buildException(e);
+    } on ServerException {
+      rethrow;
+    } on Object {
+      throw const ServerException(
+        message: 'Formato de resposta invalido ao buscar insumos.',
+      );
     }
   }
 
   @override
-  Future<InsumoModel> getInsumo(String id) async {
+  Future<InsumoModel> getInsumo(int id) async {
     try {
       final response = await dio.get(ApiConstants.insumoById(id));
-      return InsumoModel.fromJson(response.data as Map<String, dynamic>);
+      return InsumoModel.fromJson(_extractInsumoMap(response.data));
     } on DioException catch (e) {
       throw _buildException(e);
     }
@@ -62,24 +68,24 @@ class InsumoRemoteDatasourceImpl implements InsumoRemoteDatasource {
   Future<InsumoModel> createInsumo(Map<String, dynamic> data) async {
     try {
       final response = await dio.post(ApiConstants.insumos, data: data);
-      return InsumoModel.fromJson(response.data as Map<String, dynamic>);
+      return InsumoModel.fromJson(_extractInsumoMap(response.data));
     } on DioException catch (e) {
       throw _buildException(e);
     }
   }
 
   @override
-  Future<InsumoModel> updateInsumo(String id, Map<String, dynamic> data) async {
+  Future<InsumoModel> updateInsumo(int id, Map<String, dynamic> data) async {
     try {
-      final response = await dio.put(ApiConstants.insumoById(id), data: data);
-      return InsumoModel.fromJson(response.data as Map<String, dynamic>);
+      final response = await dio.patch(ApiConstants.insumoById(id), data: data);
+      return InsumoModel.fromJson(_extractInsumoMap(response.data));
     } on DioException catch (e) {
       throw _buildException(e);
     }
   }
 
   @override
-  Future<void> deleteInsumo(String id) async {
+  Future<void> deleteInsumo(int id) async {
     try {
       await dio.delete(ApiConstants.insumoById(id));
     } on DioException catch (e) {
@@ -87,19 +93,66 @@ class InsumoRemoteDatasourceImpl implements InsumoRemoteDatasource {
     }
   }
 
+  List<dynamic> _extractInsumosList(dynamic responseData) {
+    final parsedData = responseData is String
+        ? jsonDecode(responseData)
+        : responseData;
+
+    if (parsedData is List<dynamic>) {
+      return parsedData;
+    }
+
+    if (parsedData is Map && parsedData['data'] is List<dynamic>) {
+      return parsedData['data'] as List<dynamic>;
+    }
+
+    throw const ServerException(
+      message: 'Formato de resposta invalido ao buscar insumos.',
+    );
+  }
+
+  Map<String, dynamic> _extractInsumoMap(dynamic responseData) {
+    final parsedData = responseData is String
+        ? jsonDecode(responseData)
+        : responseData;
+
+    if (parsedData is Map<String, dynamic>) {
+      if (parsedData['data'] is Map<String, dynamic>) {
+        return parsedData['data'] as Map<String, dynamic>;
+      }
+
+      return parsedData;
+    }
+
+    throw const ServerException(
+      message: 'Formato de resposta invalido ao ler insumo.',
+    );
+  }
+
   Exception _buildException(DioException e) {
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.connectionError) {
       return NetworkException(
-        message: 'Sem conexão com o servidor: ${e.message}',
+        message: 'Sem conexao com o servidor: ${e.message}',
       );
     }
-    return ServerException(
-      message:
-          e.response?.data?['message']?.toString() ??
+
+    final dynamic responseData = e.response?.data;
+    String message = 'Erro no servidor';
+
+    if (responseData is Map<String, dynamic>) {
+      message =
+          responseData['message']?.toString() ??
+          responseData['error']?.toString() ??
           e.message ??
-          'Erro no servidor',
+          message;
+    } else if (e.message != null && e.message!.trim().isNotEmpty) {
+      message = e.message!;
+    }
+
+    return ServerException(
+      message: message,
       statusCode: e.response?.statusCode,
     );
   }

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'core/auth/auth_session.dart';
 import 'core/di/injection_container.dart';
-import 'features/estoques/presentation/cubit/estoques_cubit.dart';
-import 'features/insumos/presentation/cubit/insumos_cubit.dart';
-
-// Importando a nossa Tela Base (com a Nav Bar) direto da pasta core oficial
 import 'core/presentation/pages/main_screen.dart';
 import 'features/auth/data/auth_remote_datasource.dart';
 import 'features/auth/presentation/pages/login_page.dart';
+import 'features/estoques/presentation/cubit/estoques_cubit.dart';
+import 'features/insumos/presentation/cubit/insumos_cubit.dart';
+import 'features/receitas/presentation/cubit/receitas_cubit.dart';
+import 'features/vendas/presentation/cubit/vendas_cubit.dart';
 
 void main() {
   initDependencies();
@@ -24,15 +25,15 @@ class LucroAiApp extends StatelessWidget {
       title: 'LucroAI',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFF0D0D0D),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFE85D33),
-          brightness: Brightness.dark,
-        ),
         useMaterial3: true,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF050505),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFFFF6B3D),
+          secondary: Color(0xFFFF6B3D),
+          surface: Color(0xFF111111),
+        ),
       ),
-      // O BlocProvider envolve a MainScreen, garantindo que o estado de Insumos
-      // esteja disponível quando a MainScreen puxar a InsumosPage.
       home: const AuthGate(),
     );
   }
@@ -51,8 +52,12 @@ class _AuthGateState extends State<AuthGate> {
       email: email,
       senha: senha,
     );
+
     AuthSession.start(token);
-    if (mounted) setState(() {});
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -64,6 +69,8 @@ class _AuthGateState extends State<AuthGate> {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => sl<InsumosCubit>()),
+        BlocProvider(create: (_) => sl<ReceitasCubit>()),
+        BlocProvider(create: (_) => sl<VendasCubit>()),
         BlocProvider(create: (_) => sl<EstoquesCubit>()),
       ],
       child: const MainScreen(),

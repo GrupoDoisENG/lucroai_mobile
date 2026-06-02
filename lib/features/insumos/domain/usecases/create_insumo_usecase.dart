@@ -3,21 +3,22 @@ import '../repositories/insumo_repository.dart';
 
 class CreateInsumoUsecase {
   final InsumoRepository repository;
+
   CreateInsumoUsecase(this.repository);
 
   Future<Insumo> call({
+    required int empresaId,
     required String nome,
-    String? descricao,
-    required InsumoCategoria categoria,
-    required InsumoUnidadeMedida unidadeMedida,
-    required double precoUnitario,
-    required double estoqueMinimo,
-  }) => repository.createInsumo(
-        nome: nome,
-        descricao: descricao,
-        categoria: categoria,
-        unidadeMedida: unidadeMedida,
-        precoUnitario: precoUnitario,
-        estoqueMinimo: estoqueMinimo,
-      );
+    required double quantidade,
+    required InsumoUnidadeMedida unidade,
+    required double valorPago,
+  }) {
+    return repository.createInsumo(
+      empresaId: empresaId,
+      nome: nome,
+      quantidade: quantidade,
+      unidade: unidade,
+      valorPago: valorPago,
+    );
+  }
 }

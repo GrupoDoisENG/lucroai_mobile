@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/entities/insumo.dart';
+import '../../domain/services/insumo_custo_calculator.dart';
 import '../cubit/insumos_cubit.dart';
 import '../cubit/insumos_state.dart';
 import '../widgets/insumo_card.dart';
-// import 'insumo_form_page.dart'; // Pode remover ou comentar, pois usaremos o Modal agora!
+import '../widgets/insumos_search_bar.dart';
 
 class InsumosPage extends StatefulWidget {
   const InsumosPage({super.key});
@@ -14,596 +16,515 @@ class InsumosPage extends StatefulWidget {
 }
 
 class _InsumosPageState extends State<InsumosPage> {
-  final _searchCtrl = TextEditingController();
-  bool? _filterAtivo;
-  InsumoCategoria? _filterCategoria;
-
-  // --- CORES DO PROTÓTIPO ---
-  final Color bgDark = const Color(0xFF0A0A0A);
-  final Color cardDark = const Color(0xFF151515);
-  final Color primaryOrange = const Color(0xFFE85D33);
-  final Color textSecondary = const Color(0xFF888888);
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    context.read<InsumosCubit>().loadInsumos();
-    
-    // Atualiza a tela quando digitar na busca para mostrar/esconder o botão de "limpar (X)"
-    _searchCtrl.addListener(() {
-      setState(() {}); 
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cubit = context.read<InsumosCubit>();
+      if (cubit.state.status == InsumosStatus.initial) {
+        cubit.loadInsumos();
+      }
     });
   }
 
   @override
   void dispose() {
-    _searchCtrl.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
-  List<Insumo> _getInsumos(InsumosState state) {
-    if (state is InsumosLoaded) return state.insumos;
-    if (state is InsumoActionLoading) return state.insumos;
-    if (state is InsumoActionSuccess) return state.insumos;
-    if (state is InsumoActionError) return state.insumos;
-    return [];
-  }
-
-  // --- ALTERADO PARA ABRIR O MODAL NO LUGAR DA NOVA PÁGINA ---
-  void _openForm({Insumo? insumo}) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(
-        value: context.read<InsumosCubit>(),
-        child: NovoInsumoModal(insumoParaEditar: insumo),
-      ),
+  Future<void> _openFormDialog({Insumo? insumo}) async {
+    final empresaIdController = TextEditingController(
+      text: (insumo?.empresaId ?? 1).toString(),
     );
+    final nomeController = TextEditingController(text: insumo?.nome ?? '');
+    final quantidadeController = TextEditingController(
+      text: insumo?.quantidade.toString() ?? '',
+    );
+    final valorPagoController = TextEditingController(
+      text: insumo?.valorPago.toString() ?? '',
+    );
+
+    InsumoUnidadeMedida unidade = insumo?.unidade ?? InsumoUnidadeMedida.gramas;
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final quantidade = _parseDouble(quantidadeController.text) ?? 0;
+            final valorPago = _parseDouble(valorPagoController.text) ?? 0;
+            final custoUnitario = InsumoCustoCalculator.calcularCustoUnitario(
+              valorPago: valorPago,
+              quantidade: quantidade,
+            );
+
+            return Dialog(
+              backgroundColor: const Color(0xFF111111),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          insumo == null ? 'Novo insumo' : 'Editar insumo',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        if (insumo == null) ...[
+                          _buildInput(
+                            controller: empresaIdController,
+                            label: 'Empresa ID',
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              final empresaId = int.tryParse(value ?? '');
+                              if (empresaId == null || empresaId <= 0) {
+                                return 'Informe o ID da empresa';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        _buildInput(
+                          controller: nomeController,
+                          label: 'Nome',
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Informe o nome';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildInput(
+                                controller: quantidadeController,
+                                label: 'Quantidade',
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                onChanged: (_) => setModalState(() {}),
+                                validator: (value) {
+                                  final quantidade = _parseDouble(value ?? '');
+                                  if (quantidade == null || quantidade < 0) {
+                                    return 'Obrigatorio';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _buildDropdown<InsumoUnidadeMedida>(
+                                label: 'Unidade',
+                                value: unidade,
+                                items: InsumoUnidadeMedida.values,
+                                itemLabel: (item) => item.label,
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setModalState(() {
+                                      unidade = value;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildInput(
+                          controller: valorPagoController,
+                          label: 'Valor pago',
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          onChanged: (_) => setModalState(() {}),
+                          validator: (value) {
+                            final valorPago = _parseDouble(value ?? '');
+                            if (valorPago == null || valorPago < 0) {
+                              return 'Obrigatorio';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF171717),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFF272727)),
+                          ),
+                          child: Text(
+                            'Custo unitario: ${_formatUnitPrice(custoUnitario, unidade.label)}',
+                            style: const TextStyle(
+                              color: Color(0xFFFF6B3D),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(),
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(
+                                    color: Color(0xFF2B2B2B),
+                                  ),
+                                  foregroundColor: Colors.white70,
+                                  minimumSize: const Size.fromHeight(46),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text('Cancelar'),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  if (!formKey.currentState!.validate()) {
+                                    return;
+                                  }
+
+                                  final navigator = Navigator.of(dialogContext);
+                                  final cubit = context.read<InsumosCubit>();
+                                  final nome = nomeController.text.trim();
+                                  final quantidade =
+                                      _parseDouble(quantidadeController.text) ??
+                                      0;
+                                  final valorPago =
+                                      _parseDouble(valorPagoController.text) ??
+                                      0;
+
+                                  if (insumo == null) {
+                                    await cubit.createInsumo(
+                                      empresaId: int.parse(
+                                        empresaIdController.text.trim(),
+                                      ),
+                                      nome: nome,
+                                      quantidade: quantidade,
+                                      unidade: unidade,
+                                      valorPago: valorPago,
+                                    );
+                                  } else {
+                                    await cubit.updateInsumo(
+                                      id: insumo.id,
+                                      nome: nome,
+                                      quantidade: quantidade,
+                                      unidade: unidade,
+                                      valorPago: valorPago,
+                                    );
+                                  }
+
+                                  if (dialogContext.mounted) {
+                                    navigator.pop();
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFFF6B3D),
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size.fromHeight(46),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Text(
+                                  insumo == null ? 'Salvar' : 'Atualizar',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    empresaIdController.dispose();
+    nomeController.dispose();
+    quantidadeController.dispose();
+    valorPagoController.dispose();
   }
 
   Future<void> _confirmDelete(Insumo insumo) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: cardDark,
-        title: const Text('Excluir Insumo', style: TextStyle(color: Colors.white)),
-        content: Text('Deseja excluir "${insumo.nome}"? Esta ação não pode ser desfeita.', style: TextStyle(color: textSecondary)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar', style: TextStyle(color: Colors.grey))),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
-            child: const Text('Excluir'),
+      barrierColor: Colors.black87,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF111111),
+          title: const Text(
+            'Excluir insumo',
+            style: TextStyle(color: Colors.white),
           ),
-        ],
-      ),
+          content: Text(
+            'Deseja excluir "${insumo.nome}"?',
+            style: const TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                'Excluir',
+                style: TextStyle(color: Color(0xFFFF6B3D)),
+              ),
+            ),
+          ],
+        );
+      },
     );
+
     if (confirmed == true && mounted) {
-      context.read<InsumosCubit>().removeInsumo(insumo.id);
+      await context.read<InsumosCubit>().deleteInsumo(insumo.id);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgDark,
-      appBar: AppBar(
-        backgroundColor: bgDark,
-        elevation: 0,
-        toolbarHeight: 80,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Insumos", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 4),
-            Text("Gerencie seus materiais e custos", style: TextStyle(fontSize: 14, color: textSecondary)),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.filter_list, color: primaryOrange),
-            tooltip: 'Filtros',
-            onPressed: () => _showFilterSheet(context),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // --- BARRA DE BUSCA COM DESIGN DO PROTÓTIPO ---
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Container(
-              height: 45,
-              decoration: BoxDecoration(color: cardDark, borderRadius: BorderRadius.circular(10)),
-              child: TextField(
-                controller: _searchCtrl,
-                style: const TextStyle(color: Colors.white),
-                onChanged: (value) => context.read<InsumosCubit>().searchInsumos(value),
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.search, color: textSecondary, size: 20),
-                  hintText: "Buscar insumos...",
-                  hintStyle: TextStyle(color: textSecondary, fontSize: 14),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  suffixIcon: _searchCtrl.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, size: 18),
-                          color: textSecondary,
-                          onPressed: () {
-                            _searchCtrl.clear();
-                            context.read<InsumosCubit>().searchInsumos('');
-                          },
-                        )
-                      : null,
+      backgroundColor: const Color(0xFF050505),
+      body: BlocConsumer<InsumosCubit, InsumosState>(
+        listener: (context, state) {
+          if (state.errorMessage != null &&
+              state.errorMessage!.trim().isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                backgroundColor: const Color(0xFF1B1B1B),
+                content: Text(
+                  state.errorMessage!,
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
-            ),
-          ),
-          
-          if (_filterAtivo != null || _filterCategoria != null)
-            _ActiveFiltersBar(
-              filterAtivo: _filterAtivo,
-              filterCategoria: _filterCategoria,
-              onClear: () {
-                setState(() {
-                  _filterAtivo = null;
-                  _filterCategoria = null;
-                });
-                context.read<InsumosCubit>().applyFilter();
-              },
-            ),
-            
-          Expanded(
-            child: BlocConsumer<InsumosCubit, InsumosState>(
-              listener: (context, state) {
-                if (state is InsumoActionSuccess) {
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.green));
-                }
-                if (state is InsumoActionError) {
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                    ));
-                }
-              },
-              builder: (context, state) {
-                if (state is InsumosLoading) {
-                  return Center(child: CircularProgressIndicator(color: primaryOrange));
-                }
-
-                if (state is InsumosError) {
-                  return _ErrorView(
-                    message: state.message,
-                    onRetry: () => context.read<InsumosCubit>().loadInsumos(),
-                  );
-                }
-
-                final insumos = _getInsumos(state);
-                final isActionLoading = state is InsumoActionLoading;
-
-                if (insumos.isEmpty && !isActionLoading) {
-                  return _EmptyView(onAdd: () => _openForm());
-                }
-
-                return Stack(
-                  children: [
-                    RefreshIndicator(
-                      color: primaryOrange,
-                      backgroundColor: cardDark,
-                      onRefresh: () => context.read<InsumosCubit>().loadInsumos(),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.only(top: 8, bottom: 88, left: 16, right: 16),
-                        itemCount: insumos.length,
-                        itemBuilder: (_, index) {
-                          final insumo = insumos[index];
-                          // O seu InsumoCard foi mantido! Explicarei sobre ele abaixo.
-                          return InsumoCard(
-                            insumo: insumo,
-                            onTap: () => _openForm(insumo: insumo),
-                            onToggleAtivo: () => context.read<InsumosCubit>().toggleInsumoAtivo(insumo),
-                            onDelete: () => _confirmDelete(insumo),
-                          );
-                        },
+            );
+          }
+        },
+        builder: (context, state) {
+          return SafeArea(
+            child: RefreshIndicator(
+              color: const Color(0xFFFF6B3D),
+              backgroundColor: const Color(0xFF111111),
+              onRefresh: () => context.read<InsumosCubit>().loadInsumos(
+                search: state.search,
+                showLoader: false,
+              ),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+                children: [
+                  const Text(
+                    'Insumos',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 27,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Gerencie quantidade, valor pago e custo unitario',
+                    style: TextStyle(color: Color(0xFF7C7C7C), fontSize: 12.5),
+                  ),
+                  const SizedBox(height: 18),
+                  InsumosSearchBar(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      context.read<InsumosCubit>().onSearchChanged(value);
+                    },
+                    onAdd: () => _openFormDialog(),
+                  ),
+                  const SizedBox(height: 16),
+                  if (state.status == InsumosStatus.loading &&
+                      state.insumos.isEmpty) ...[
+                    const SizedBox(height: 80),
+                    const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFFF6B3D),
                       ),
                     ),
-                    if (isActionLoading)
-                      Positioned(
-                        top: 0, left: 0, right: 0,
-                        child: LinearProgressIndicator(color: primaryOrange, backgroundColor: cardDark),
+                  ] else if (state.status == InsumosStatus.error &&
+                      state.insumos.isEmpty) ...[
+                    const SizedBox(height: 80),
+                    const Center(
+                      child: Text(
+                        'Nao foi possivel carregar os insumos.',
+                        style: TextStyle(color: Colors.white70),
                       ),
+                    ),
+                  ] else if (state.insumos.isEmpty) ...[
+                    const SizedBox(height: 80),
+                    const Center(
+                      child: Text(
+                        'Nenhum insumo encontrado.',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ),
+                  ] else ...[
+                    ...state.insumos.map(
+                      (insumo) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: InsumoCard(
+                          insumo: insumo,
+                          onTap: () => _openFormDialog(insumo: insumo),
+                          onDelete: () => _confirmDelete(insumo),
+                        ),
+                      ),
+                    ),
                   ],
-                );
-              },
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-      
-      // --- BOTÃO FLUTUANTE (FAB) COM CORES DO PROTÓTIPO ---
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: primaryOrange,
-        onPressed: () => _openForm(),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-      ),
-    );
-  }
-
-  void _showFilterSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: cardDark,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => _FilterSheet(
-        filterAtivo: _filterAtivo,
-        filterCategoria: _filterCategoria,
-        onApply: (ativo, categoria) {
-          setState(() {
-            _filterAtivo = ativo;
-            _filterCategoria = categoria;
-          });
-          context.read<InsumosCubit>().applyFilter(ativo: ativo, categoria: categoria);
+          );
         },
       ),
     );
   }
-}
 
-// ============================================================================
-// WIDGETS AUXILIARES (Filtros, Empty View, Error View)
-// Mantive a sua lógica, apenas ajustei um pouco das cores para não quebrar o Dark Mode
-// ============================================================================
-
-class _ActiveFiltersBar extends StatelessWidget {
-  final bool? filterAtivo;
-  final InsumoCategoria? filterCategoria;
-  final VoidCallback onClear;
-
-  const _ActiveFiltersBar({required this.filterAtivo, required this.filterCategoria, required this.onClear});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-      child: Row(
-        children: [
-          const Icon(Icons.filter_alt, size: 16, color: Color(0xFFE85D33)),
-          const SizedBox(width: 4),
-          if (filterCategoria != null)
-            Chip(label: Text(filterCategoria!.label, style: const TextStyle(color: Colors.white)), backgroundColor: const Color(0xFF151515), visualDensity: VisualDensity.compact),
-          if (filterCategoria != null && filterAtivo != null) const SizedBox(width: 4),
-          if (filterAtivo != null)
-            Chip(
-              label: Text(filterAtivo! ? 'Ativos' : 'Inativos', style: const TextStyle(color: Colors.white)),
-              backgroundColor: const Color(0xFF151515),
-              visualDensity: VisualDensity.compact,
-            ),
-          const Spacer(),
-          TextButton.icon(
-            onPressed: onClear,
-            icon: const Icon(Icons.clear, size: 16, color: Colors.grey),
-            label: const Text('Limpar', style: TextStyle(color: Colors.grey)),
-            style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterSheet extends StatefulWidget {
-  final bool? filterAtivo;
-  final InsumoCategoria? filterCategoria;
-  final void Function(bool? ativo, InsumoCategoria? categoria) onApply;
-
-  const _FilterSheet({required this.filterAtivo, required this.filterCategoria, required this.onApply});
-
-  @override
-  State<_FilterSheet> createState() => _FilterSheetState();
-}
-
-class _FilterSheetState extends State<_FilterSheet> {
-  bool? _ativo;
-  InsumoCategoria? _categoria;
-
-  @override
-  void initState() {
-    super.initState();
-    _ativo = widget.filterAtivo;
-    _categoria = widget.filterCategoria;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              const Text('Filtros', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-              const Spacer(),
-              IconButton(icon: const Icon(Icons.close, color: Colors.grey), onPressed: () => Navigator.pop(context)),
-            ],
-          ),
-          const Divider(color: Colors.white10),
-          const SizedBox(height: 8),
-          const Text('Status', style: TextStyle(color: Colors.white70)),
-          const SizedBox(height: 8),
-          SegmentedButton<bool?>(
-            segments: const [
-              ButtonSegment(value: null, label: Text('Todos')),
-              ButtonSegment(value: true, label: Text('Ativos')),
-              ButtonSegment(value: false, label: Text('Inativos')),
-            ],
-            selected: {_ativo},
-            onSelectionChanged: (v) => setState(() => _ativo = v.first),
-          ),
-          const SizedBox(height: 16),
-          const Text('Categoria', style: TextStyle(color: Colors.white70)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8, runSpacing: 4,
-            children: [
-              FilterChip(
-                label: const Text('Todas'),
-                selected: _categoria == null,
-                onSelected: (_) => setState(() => _categoria = null),
-              ),
-              ...InsumoCategoria.values.map(
-                (c) => FilterChip(
-                  label: Text(c.label),
-                  selected: _categoria == c,
-                  onSelected: (_) => setState(() => _categoria = c),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE85D33)),
-            onPressed: () {
-              Navigator.pop(context);
-              widget.onApply(_ativo, _categoria);
-            },
-            child: const Text('Aplicar Filtros', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyView extends StatelessWidget {
-  final VoidCallback onAdd;
-  const _EmptyView({required this.onAdd});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.inventory_2_outlined, size: 80, color: const Color(0xFFE85D33).withValues(alpha: 0.5)),
-          const SizedBox(height: 16),
-          const Text('Nenhum insumo encontrado', style: TextStyle(color: Colors.white, fontSize: 18)),
-          const SizedBox(height: 8),
-          const Text('Adicione seu primeiro insumo', style: TextStyle(color: Colors.grey)),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE85D33)),
-            onPressed: onAdd,
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text('Novo Insumo', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-  const _ErrorView({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Theme.of(context).colorScheme.error),
-            const SizedBox(height: 16),
-            const Text('Erro ao carregar insumos', style: TextStyle(color: Colors.white, fontSize: 18), textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            Text(message, style: const TextStyle(color: Colors.grey), textAlign: TextAlign.center),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE85D33)),
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh, color: Colors.white),
-              label: const Text('Tentar Novamente', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+  Widget _buildInput({
+    required TextEditingController controller,
+    required String label,
+    TextInputType? keyboardType,
+    bool readOnly = false,
+    ValueChanged<String>? onChanged,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
+      onChanged: onChanged,
+      validator: validator,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Color(0xFF8A8A8A)),
+        filled: true,
+        fillColor: const Color(0xFF171717),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF272727)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF272727)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFFF6B3D)),
         ),
       ),
     );
   }
-}
 
-// ============================================================================
-// O NOSSO MODAL DE ADICIONAR (Agora integrado direto no final do arquivo)
-// ============================================================================
+  Widget _buildDropdown<T>({
+    required String label,
+    required T value,
+    required List<T> items,
+    required String Function(T item) itemLabel,
+    required ValueChanged<T?> onChanged,
+  }) {
+    return DropdownButtonFormField<T>(
+      initialValue: value,
+      onChanged: onChanged,
+      dropdownColor: const Color(0xFF171717),
+      style: const TextStyle(color: Colors.white),
+      iconEnabledColor: const Color(0xFFFF6B3D),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Color(0xFF8A8A8A)),
+        filled: true,
+        fillColor: const Color(0xFF171717),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF272727)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF272727)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFFF6B3D)),
+        ),
+      ),
+      items: items
+          .map(
+            (item) =>
+                DropdownMenuItem<T>(value: item, child: Text(itemLabel(item))),
+          )
+          .toList(),
+    );
+  }
 
-class NovoInsumoModal extends StatefulWidget {
-  final Insumo? insumoParaEditar; // Prepara para receber edição no futuro
-
-  const NovoInsumoModal({super.key, this.insumoParaEditar});
-
-  @override
-  State<NovoInsumoModal> createState() => _NovoInsumoModalState();
-}
-
-class _NovoInsumoModalState extends State<NovoInsumoModal> {
-  final _nomeController = TextEditingController();
-  final _estoqueMinimoController = TextEditingController();
-  final _precoUnitarioController = TextEditingController();
-  String _unidadeSelecionada = InsumoUnidadeMedida.g.value;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.insumoParaEditar != null) {
-      _nomeController.text = widget.insumoParaEditar!.nome;
-      _estoqueMinimoController.text = widget.insumoParaEditar!.estoqueMinimo.toString();
-      _precoUnitarioController.text = widget.insumoParaEditar!.precoUnitario.toString();
-      _unidadeSelecionada = widget.insumoParaEditar!.unidadeMedida.value;
+  double? _parseDouble(String value) {
+    final normalized = value.trim().replaceAll(',', '.');
+    if (normalized.isEmpty) {
+      return null;
     }
+    return double.tryParse(normalized);
   }
 
-  void _salvarInsumo() async {
-    if (_nomeController.text.isEmpty || _estoqueMinimoController.text.isEmpty || _precoUnitarioController.text.isEmpty) return;
+  static String _formatUnitPrice(double value, String unidade) {
+    return 'R\$ ${_formatNumber(value, decimals: 4)}/$unidade';
+  }
 
-    // Chamamos a função saveInsumo do seu Cubit passando os parâmetros exatos que ele pede
-    final sucesso = await context.read<InsumosCubit>().saveInsumo(
-      id: widget.insumoParaEditar?.id, // Se for null, o Cubit sabe que é para criar. Se tiver ID, ele atualiza!
-      nome: _nomeController.text,
-      descricao: widget.insumoParaEditar?.descricao, 
-      categoria: InsumoCategoria.materiaPrima, // (Fixo por enquanto, até criarmos o dropdown de categorias)
-      unidadeMedida: InsumoUnidadeMedida.fromValue(_unidadeSelecionada),
-      precoUnitario: double.parse(_precoUnitarioController.text.replaceAll(',', '.')),
-      estoqueMinimo: double.parse(_estoqueMinimoController.text),
-      ativo: widget.insumoParaEditar?.ativo ?? true,
-    );
+  static String _formatNumber(double value, {int decimals = 2}) {
+    final fixed = value.toStringAsFixed(decimals);
+    final parts = fixed.split('.');
+    final integer = parts[0];
+    var decimal = parts.length > 1 ? parts[1] : '';
 
-    // O seu Cubit retorna um 'bool' dizendo se deu certo. Só fechamos o modal se salvou com sucesso.
-    if (sucesso && mounted) {
-      Navigator.pop(context);
+    if (decimals > 2) {
+      decimal = decimal.replaceFirst(RegExp(r'0+$'), '');
+      if (decimal.isEmpty) {
+        decimal = '0';
+      }
     }
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    const Color cardDark = Color(0xFF151515);
-    const Color inputDark = Color(0xFF1E1E1E);
-    const Color primaryOrange = Color(0xFFE85D33);
-    const Color textSecondary = Color(0xFF888888);
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: cardDark,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(widget.insumoParaEditar == null ? "Novo Insumo" : "Editar Insumo", style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                GestureDetector(onTap: () => Navigator.pop(context), child: const Icon(Icons.close, color: textSecondary)),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Container(
-              decoration: BoxDecoration(color: inputDark, borderRadius: BorderRadius.circular(10), border: Border.all(color: primaryOrange, width: 1)),
-              child: TextField(
-                controller: _nomeController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: "Nome do insumo",
-                  hintStyle: TextStyle(color: textSecondary),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    decoration: BoxDecoration(color: inputDark, borderRadius: BorderRadius.circular(10)),
-                    child: TextField(
-                      controller: _estoqueMinimoController,
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        hintText: "Estoque Mínimo",
-                        hintStyle: TextStyle(color: textSecondary),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(color: inputDark, borderRadius: BorderRadius.circular(10)),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _unidadeSelecionada,
-                        dropdownColor: inputDark,
-                        icon: const Icon(Icons.keyboard_arrow_down, color: textSecondary),
-                        isExpanded: true,
-                        style: const TextStyle(color: Colors.white, fontSize: 16),
-                        items: InsumoUnidadeMedida.values.map((unidade) {
-                          return DropdownMenuItem<String>(value: unidade.value, child: Text(unidade.label));
-                        }).toList(),
-                        onChanged: (String? newValue) => setState(() => _unidadeSelecionada = newValue!),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(color: inputDark, borderRadius: BorderRadius.circular(10)),
-              child: TextField(
-                controller: _precoUnitarioController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: "Preço Unitário (R\$)",
-                  hintStyle: TextStyle(color: textSecondary),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: primaryOrange, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                onPressed: _salvarInsumo,
-                child: Text(widget.insumoParaEditar == null ? "Adicionar Insumo" : "Salvar Alterações", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
-            ),
-            const SizedBox(height: 10),
-          ],
-        ),
-      ),
-    );
+    return decimal.isEmpty ? integer : '$integer,$decimal';
   }
 }

@@ -9,57 +9,51 @@ class InsumoRepositoryImpl implements InsumoRepository {
   InsumoRepositoryImpl({required this.datasource});
 
   @override
-  Future<List<Insumo>> getInsumos({
-    bool? ativo,
-    InsumoCategoria? categoria,
-    String? search,
-  }) => datasource.getInsumos(ativo: ativo, categoria: categoria, search: search);
+  Future<List<Insumo>> getInsumos({String? search}) {
+    return datasource.getInsumos(search: search);
+  }
 
   @override
-  Future<Insumo> getInsumo(String id) => datasource.getInsumo(id);
+  Future<Insumo> getInsumo(int id) => datasource.getInsumo(id);
 
   @override
   Future<Insumo> createInsumo({
+    required int empresaId,
     required String nome,
-    String? descricao,
-    required InsumoCategoria categoria,
-    required InsumoUnidadeMedida unidadeMedida,
-    required double precoUnitario,
-    required double estoqueMinimo,
-  }) => datasource.createInsumo(
-        InsumoModel.toJsonCreate(
-          nome: nome,
-          descricao: descricao,
-          categoria: categoria,
-          unidadeMedida: unidadeMedida,
-          precoUnitario: precoUnitario,
-          estoqueMinimo: estoqueMinimo,
-        ),
-      );
+    required double quantidade,
+    required InsumoUnidadeMedida unidade,
+    required double valorPago,
+  }) {
+    return datasource.createInsumo(
+      InsumoModel.toJsonCreate(
+        empresaId: empresaId,
+        nome: nome,
+        quantidade: quantidade,
+        unidade: unidade,
+        valorPago: valorPago,
+      ),
+    );
+  }
 
   @override
   Future<Insumo> updateInsumo({
-    required String id,
+    required int id,
     String? nome,
-    String? descricao,
-    InsumoCategoria? categoria,
-    InsumoUnidadeMedida? unidadeMedida,
-    double? precoUnitario,
-    double? estoqueMinimo,
-    bool? ativo,
-  }) => datasource.updateInsumo(
-        id,
-        InsumoModel.toJsonUpdate(
-          nome: nome,
-          descricao: descricao,
-          categoria: categoria,
-          unidadeMedida: unidadeMedida,
-          precoUnitario: precoUnitario,
-          estoqueMinimo: estoqueMinimo,
-          ativo: ativo,
-        ),
-      );
+    double? quantidade,
+    InsumoUnidadeMedida? unidade,
+    double? valorPago,
+  }) {
+    return datasource.updateInsumo(
+      id,
+      InsumoModel.toJsonUpdate(
+        nome: nome,
+        quantidade: quantidade,
+        unidade: unidade,
+        valorPago: valorPago,
+      ),
+    );
+  }
 
   @override
-  Future<void> deleteInsumo(String id) => datasource.deleteInsumo(id);
+  Future<void> deleteInsumo(int id) => datasource.deleteInsumo(id);
 }

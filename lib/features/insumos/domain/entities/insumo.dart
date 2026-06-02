@@ -1,81 +1,43 @@
-import 'package:equatable/equatable.dart';
-
-enum InsumoCategoria {
-  materiaPrima('materia_prima', 'Matéria-Prima'),
-  embalagem('embalagem', 'Embalagem'),
-  ingrediente('ingrediente', 'Ingrediente'),
-  descartavel('descartavel', 'Descartável'),
-  limpeza('limpeza', 'Limpeza'),
-  outros('outros', 'Outros');
-
-  final String value;
-  final String label;
-  const InsumoCategoria(this.value, this.label);
-
-  static InsumoCategoria fromValue(String value) =>
-      InsumoCategoria.values.firstWhere((e) => e.value == value);
-}
-
 enum InsumoUnidadeMedida {
-  kg('kg', 'kg'),
-  g('g', 'g'),
-  mg('mg', 'mg'),
-  l('l', 'L'),
-  ml('ml', 'mL'),
-  un('un', 'un'),
-  cx('cx', 'cx'),
-  pct('pct', 'pct'),
-  m('m', 'm'),
-  cm('cm', 'cm');
+  gramas('G', 'g'),
+  quilogramas('KG', 'kg'),
+  mililitros('ML', 'ml'),
+  litros('L', 'l'),
+  unidades('UN', 'un');
 
-  final String value;
-  final String label;
   const InsumoUnidadeMedida(this.value, this.label);
 
-  static InsumoUnidadeMedida fromValue(String value) =>
-      InsumoUnidadeMedida.values.firstWhere((e) => e.value == value);
+  final String value;
+  final String label;
+
+  static InsumoUnidadeMedida fromValue(String value) {
+    final normalizedValue = value.trim().toUpperCase();
+
+    return InsumoUnidadeMedida.values.firstWhere(
+      (unidade) => unidade.value == normalizedValue,
+      orElse: () => InsumoUnidadeMedida.unidades,
+    );
+  }
 }
 
-class Insumo extends Equatable {
-  final String id;
+class Insumo {
+  final int id;
+  final int empresaId;
   final String nome;
-  final String? descricao;
-  final InsumoCategoria categoria;
-  final InsumoUnidadeMedida unidadeMedida;
-  final double precoUnitario;
-  final double estoqueMinimo;
-  final bool ativo;
-  final DateTime criadoEm;
-  final DateTime atualizadoEm;
+  final double quantidade;
+  final InsumoUnidadeMedida unidade;
+  final double valorPago;
+  final double custoUnitario;
+  final DateTime dataCriacao;
 
   const Insumo({
     required this.id,
+    required this.empresaId,
     required this.nome,
-    this.descricao,
-    required this.categoria,
-    required this.unidadeMedida,
-    required this.precoUnitario,
-    required this.estoqueMinimo,
-    required this.ativo,
-    required this.criadoEm,
-    required this.atualizadoEm,
+    required this.quantidade,
+    required this.unidade,
+    required this.valorPago,
+    required this.custoUnitario,
+    required this.dataCriacao,
   });
-
-  String get detalheFormatado => "${categoria.label} • Mínimo: ${estoqueMinimo.toInt()} ${unidadeMedida.label}";
-  
-  String get custoUnitarioFormatado => "R\$ ${precoUnitario.toStringAsFixed(4)}/${unidadeMedida.label}";
-
-  @override
-  List<Object?> get props => [
-        id,
-        nome,
-        descricao,
-        categoria,
-        unidadeMedida,
-        precoUnitario,
-        estoqueMinimo,
-        ativo,
-        criadoEm,
-        atualizadoEm,
-      ];
 }

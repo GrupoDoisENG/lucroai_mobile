@@ -3,79 +3,72 @@ import '../../domain/entities/insumo.dart';
 class InsumoModel extends Insumo {
   const InsumoModel({
     required super.id,
+    required super.empresaId,
     required super.nome,
-    super.descricao,
-    required super.categoria,
-    required super.unidadeMedida,
-    required super.precoUnitario,
-    required super.estoqueMinimo,
-    required super.ativo,
-    required super.criadoEm,
-    required super.atualizadoEm,
+    required super.quantidade,
+    required super.unidade,
+    required super.valorPago,
+    required super.custoUnitario,
+    required super.dataCriacao,
   });
 
   factory InsumoModel.fromJson(Map<String, dynamic> json) {
     return InsumoModel(
-      id: json['id'] as String,
-      nome: json['nome'] as String,
-      descricao: json['descricao'] as String?,
-      categoria: InsumoCategoria.fromValue(json['categoria'] as String),
-      unidadeMedida: InsumoUnidadeMedida.fromValue(json['unidade_medida'] as String),
-      precoUnitario: double.parse(json['preco_unitario'].toString()),
-      estoqueMinimo: double.parse(json['estoque_minimo'].toString()),
-      ativo: json['ativo'] as bool,
-      criadoEm: DateTime.parse(json['criado_em'] as String),
-      atualizadoEm: DateTime.parse(json['atualizado_em'] as String),
+      id: _toInt(json['id']),
+      empresaId: _toInt(json['empresaId'] ?? json['empresa_id']),
+      nome: (json['nome'] ?? '').toString(),
+      quantidade: _toDouble(json['quantidade']),
+      unidade: InsumoUnidadeMedida.fromValue(
+        (json['unidade'] ?? 'UN').toString(),
+      ),
+      valorPago: _toDouble(json['valorPago'] ?? json['valor_pago']),
+      custoUnitario: _toDouble(json['custoUnitario'] ?? json['custo_unitario']),
+      dataCriacao: _toDate(json['dataCriacao'] ?? json['data_criacao']),
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'nome': nome,
-      'descricao': descricao,
-      'categoria': categoria.value,
-      'unidade_medida': unidadeMedida.value,
-      'preco_unitario': precoUnitario,
-      'estoque_minimo': estoqueMinimo,
-      'ativo': ativo,
-    };
-  }
-
   static Map<String, dynamic> toJsonCreate({
+    required int empresaId,
     required String nome,
-    String? descricao,
-    required InsumoCategoria categoria,
-    required InsumoUnidadeMedida unidadeMedida,
-    required double precoUnitario,
-    required double estoqueMinimo,
+    required double quantidade,
+    required InsumoUnidadeMedida unidade,
+    required double valorPago,
   }) {
     return {
+      'empresaId': empresaId,
       'nome': nome,
-      if (descricao != null) 'descricao': descricao,
-      'categoria': categoria.value,
-      'unidade_medida': unidadeMedida.value,
-      'preco_unitario': precoUnitario,
-      'estoque_minimo': estoqueMinimo,
+      'quantidade': quantidade,
+      'unidade': unidade.value,
+      'valorPago': valorPago,
     };
   }
 
   static Map<String, dynamic> toJsonUpdate({
     String? nome,
-    String? descricao,
-    InsumoCategoria? categoria,
-    InsumoUnidadeMedida? unidadeMedida,
-    double? precoUnitario,
-    double? estoqueMinimo,
-    bool? ativo,
+    double? quantidade,
+    InsumoUnidadeMedida? unidade,
+    double? valorPago,
   }) {
     return {
       if (nome != null) 'nome': nome,
-      if (descricao != null) 'descricao': descricao,
-      if (categoria != null) 'categoria': categoria.value,
-      if (unidadeMedida != null) 'unidade_medida': unidadeMedida.value,
-      if (precoUnitario != null) 'preco_unitario': precoUnitario,
-      if (estoqueMinimo != null) 'estoque_minimo': estoqueMinimo,
-      if (ativo != null) 'ativo': ativo,
+      if (quantidade != null) 'quantidade': quantidade,
+      if (unidade != null) 'unidade': unidade.value,
+      if (valorPago != null) 'valorPago': valorPago,
     };
+  }
+
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString().replaceAll(',', '.') ?? '') ?? 0;
+  }
+
+  static DateTime _toDate(dynamic value) {
+    if (value == null) return DateTime.now();
+    return DateTime.tryParse(value.toString()) ?? DateTime.now();
   }
 }

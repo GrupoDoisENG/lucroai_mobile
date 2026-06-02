@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../features/estoques/presentation/pages/estoques_page.dart';
 import '../../../features/insumos/presentation/pages/calculo_real_screen.dart';
 import '../../../features/insumos/presentation/pages/insumos_page.dart';
+import '../../../features/receitas/presentation/pages/receitas_page.dart';
+import '../../../features/vendas/presentation/pages/vendas_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -14,20 +16,16 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _indiceAtual = 1;
 
-  final List<Widget> _paginas = [
-    const Center(
+  final List<Widget> _paginas = const [
+    Center(
       child: Text('Home - Em breve', style: TextStyle(color: Colors.white)),
     ),
-    const InsumosPage(),
-    const Center(
-      child: Text('Receitas - Em breve', style: TextStyle(color: Colors.white)),
-    ),
-    const CalculoRealScreen(),
-    const Center(
-      child: Text('Vendas - Em breve', style: TextStyle(color: Colors.white)),
-    ),
-    const EstoquesPage(),
-    const Center(
+    InsumosPage(),
+    ReceitasPage(),
+    CalculoRealScreen(),
+    VendasPage(),
+    EstoquesPage(),
+    Center(
       child: Text('Simular - Em breve', style: TextStyle(color: Colors.white)),
     ),
   ];
@@ -40,8 +38,8 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryOrange = Color(0xFFE85D33);
-    const Color textSecondary = Color(0xFF888888);
+    const primaryOrange = Color(0xFFE85D33);
+    const textSecondary = Color(0xFF888888);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
@@ -114,7 +112,7 @@ class _MainScreenState extends State<MainScreen> {
     Color inactiveColor,
     Color activeColor,
   ) {
-    final bool isActive = _indiceAtual == index;
+    final isActive = _indiceAtual == index;
     final color = isActive ? activeColor : inactiveColor;
 
     return GestureDetector(
