@@ -15,9 +15,9 @@ enum InsumoCategoria {
   String get label {
     switch (this) {
       case InsumoCategoria.graos:
-        return 'Grãos';
+        return 'Graos';
       case InsumoCategoria.laticinios:
-        return 'Laticínios';
+        return 'Laticinios';
       case InsumoCategoria.carnes:
         return 'Carnes';
       case InsumoCategoria.hortifruti:
@@ -66,7 +66,7 @@ enum InsumoUnidadeMedida {
       case InsumoUnidadeMedida.unidades:
         return 'un';
       case InsumoUnidadeMedida.porcao:
-        return 'porção';
+        return 'porcao';
     }
   }
 
@@ -106,4 +106,10 @@ class Insumo {
     this.quantidadeEmbalagem,
     this.precoEmbalagem,
   });
+
+  String get detalheFormatado =>
+      '${categoria.label} - Minimo: ${estoqueMinimo.toInt()} ${unidadeMedida.label}';
+
+  String get custoUnitarioFormatado =>
+      'R\$ ${precoUnitario.toStringAsFixed(4)}/${unidadeMedida.label}';
 }

@@ -1,6 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 
+import '../../features/auth/data/auth_remote_datasource.dart';
+import '../../features/estoques/data/datasources/estoque_remote_datasource.dart';
+import '../../features/estoques/data/repositories/estoque_repository_impl.dart';
+import '../../features/estoques/domain/repositories/estoque_repository.dart';
+import '../../features/estoques/domain/usecases/get_estoques_usecase.dart';
+import '../../features/estoques/domain/usecases/get_movimentacoes_usecase.dart';
+import '../../features/estoques/domain/usecases/registrar_entrada_estoque_usecase.dart';
+import '../../features/estoques/presentation/cubit/estoques_cubit.dart';
 import '../../features/insumos/data/datasources/insumo_remote_datasource.dart';
 import '../../features/insumos/data/repositories/insumo_repository_impl.dart';
 import '../../features/insumos/domain/repositories/insumo_repository.dart';
@@ -28,18 +36,24 @@ final sl = GetIt.instance;
 void initDependencies() {
   sl.registerLazySingleton<Dio>(ApiClient.create);
 
+  sl.registerLazySingleton(() => AuthRemoteDatasource(dio: sl()));
+
   sl.registerLazySingleton<InsumoRemoteDatasource>(
     () => InsumoRemoteDatasourceImpl(dio: sl()),
   );
   sl.registerLazySingleton<ReceitaRemoteDatasource>(
     () => ReceitaRemoteDatasourceImpl(dio: sl()),
   );
+  sl.registerLazySingleton(() => EstoqueRemoteDatasource(dio: sl()));
 
   sl.registerLazySingleton<InsumoRepository>(
     () => InsumoRepositoryImpl(datasource: sl()),
   );
   sl.registerLazySingleton<ReceitaRepository>(
     () => ReceitaRepositoryImpl(datasource: sl()),
+  );
+  sl.registerLazySingleton<EstoqueRepository>(
+    () => EstoqueRepositoryImpl(remoteDatasource: sl()),
   );
 
   sl.registerLazySingleton(() => GetInsumosUsecase(sl()));
@@ -48,12 +62,17 @@ void initDependencies() {
   sl.registerLazySingleton(() => UpdateInsumoUsecase(sl()));
   sl.registerLazySingleton(() => DeleteInsumoUsecase(sl()));
   sl.registerLazySingleton(() => ToggleInsumoAtivoUsecase(sl()));
+
   sl.registerLazySingleton(() => GetReceitasUsecase(sl()));
   sl.registerLazySingleton(() => GetReceitaUsecase(sl()));
   sl.registerLazySingleton(() => CreateReceitaUsecase(sl()));
   sl.registerLazySingleton(() => UpdateReceitaUsecase(sl()));
   sl.registerLazySingleton(() => DeleteReceitaUsecase(sl()));
   sl.registerLazySingleton(() => ToggleReceitaAtivoUsecase(sl()));
+
+  sl.registerLazySingleton(() => GetEstoquesUsecase(sl()));
+  sl.registerLazySingleton(() => RegistrarEntradaEstoqueUsecase(sl()));
+  sl.registerLazySingleton(() => GetMovimentacoesUsecase(sl()));
 
   sl.registerFactory(
     () => InsumosCubit(
@@ -71,6 +90,13 @@ void initDependencies() {
       updateReceitaUsecase: sl(),
       deleteReceitaUsecase: sl(),
       toggleReceitaAtivoUsecase: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => EstoquesCubit(
+      getEstoques: sl(),
+      registrarEntrada: sl(),
+      getMovimentacoes: sl(),
     ),
   );
 }

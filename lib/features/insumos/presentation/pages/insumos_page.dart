@@ -37,7 +37,9 @@ class _InsumosPageState extends State<InsumosPage> {
 
   Future<void> _openFormDialog({Insumo? insumo}) async {
     final nomeController = TextEditingController(text: insumo?.nome ?? '');
-    final descricaoController = TextEditingController(text: insumo?.descricao ?? '');
+    final descricaoController = TextEditingController(
+      text: insumo?.descricao ?? '',
+    );
     final quantidadeController = TextEditingController(
       text: insumo?.quantidadeEmbalagem?.toString() ?? '',
     );
@@ -63,6 +65,22 @@ class _InsumosPageState extends State<InsumosPage> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            void atualizarCustoUnitario() {
+              final quantidade = _parseDouble(quantidadeController.text);
+              final precoEmbalagem = _parseDouble(
+                precoEmbalagemController.text,
+              );
+
+              if (quantidade == null ||
+                  quantidade <= 0 ||
+                  precoEmbalagem == null) {
+                return;
+              }
+
+              precoUnitarioController.text = (precoEmbalagem / quantidade)
+                  .toStringAsFixed(4);
+            }
+
             return Dialog(
               backgroundColor: const Color(0xFF111111),
               shape: RoundedRectangleBorder(
@@ -99,7 +117,7 @@ class _InsumosPageState extends State<InsumosPage> {
                         const SizedBox(height: 12),
                         _buildInput(
                           controller: descricaoController,
-                          label: 'Descrição',
+                          label: 'Descricao',
                         ),
                         const SizedBox(height: 12),
                         _buildDropdown<InsumoCategoria>(
@@ -136,19 +154,23 @@ class _InsumosPageState extends State<InsumosPage> {
                               child: _buildInput(
                                 controller: quantidadeController,
                                 label: 'Qtd. embalagem',
-                                keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                onChanged: (_) => atualizarCustoUnitario(),
                               ),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: _buildInput(
                                 controller: precoEmbalagemController,
-                                label: 'Preço embalagem',
-                                keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                label: 'Preco embalagem',
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                onChanged: (_) => atualizarCustoUnitario(),
                               ),
                             ),
                           ],
@@ -159,13 +181,14 @@ class _InsumosPageState extends State<InsumosPage> {
                             Expanded(
                               child: _buildInput(
                                 controller: precoUnitarioController,
-                                label: 'Preço unitário',
-                                keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                label: 'Preco unitario',
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
-                                    return 'Obrigatório';
+                                    return 'Obrigatorio';
                                   }
                                   return null;
                                 },
@@ -175,13 +198,14 @@ class _InsumosPageState extends State<InsumosPage> {
                             Expanded(
                               child: _buildInput(
                                 controller: estoqueMinimoController,
-                                label: 'Estoque mínimo',
-                                keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                label: 'Estoque minimo',
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
-                                    return 'Obrigatório';
+                                    return 'Obrigatorio';
                                   }
                                   return null;
                                 },
@@ -194,7 +218,8 @@ class _InsumosPageState extends State<InsumosPage> {
                           children: [
                             Expanded(
                               child: OutlinedButton(
-                                onPressed: () => Navigator.of(dialogContext).pop(),
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(),
                                 style: OutlinedButton.styleFrom(
                                   side: const BorderSide(
                                     color: Color(0xFF2B2B2B),
@@ -216,50 +241,59 @@ class _InsumosPageState extends State<InsumosPage> {
                                     return;
                                   }
 
+                                  final navigator = Navigator.of(dialogContext);
                                   final cubit = context.read<InsumosCubit>();
-
                                   final nome = nomeController.text.trim();
-                                  final descricao = descricaoController.text.trim();
+                                  final descricao = descricaoController.text
+                                      .trim();
                                   final quantidade = _parseDouble(
                                     quantidadeController.text,
                                   );
-                                  final precoEmb = _parseDouble(
+                                  final precoEmbalagem = _parseDouble(
                                     precoEmbalagemController.text,
                                   );
-                                  final precoUnit =
-                                      _parseDouble(precoUnitarioController.text) ?? 0;
-                                  final estoqueMin =
-                                      _parseDouble(estoqueMinimoController.text) ?? 0;
+                                  final precoUnitario =
+                                      _parseDouble(
+                                        precoUnitarioController.text,
+                                      ) ??
+                                      0;
+                                  final estoqueMinimo =
+                                      _parseDouble(
+                                        estoqueMinimoController.text,
+                                      ) ??
+                                      0;
 
                                   if (insumo == null) {
                                     await cubit.createInsumo(
                                       nome: nome,
-                                      descricao:
-                                          descricao.isEmpty ? null : descricao,
+                                      descricao: descricao.isEmpty
+                                          ? null
+                                          : descricao,
                                       categoria: categoria,
                                       unidadeMedida: unidade,
-                                      precoUnitario: precoUnit,
-                                      estoqueMinimo: estoqueMin,
+                                      precoUnitario: precoUnitario,
+                                      estoqueMinimo: estoqueMinimo,
                                       quantidadeEmbalagem: quantidade,
-                                      precoEmbalagem: precoEmb,
+                                      precoEmbalagem: precoEmbalagem,
                                     );
                                   } else {
                                     await cubit.updateInsumo(
                                       id: insumo.id,
                                       nome: nome,
-                                      descricao:
-                                          descricao.isEmpty ? null : descricao,
+                                      descricao: descricao.isEmpty
+                                          ? null
+                                          : descricao,
                                       categoria: categoria,
                                       unidadeMedida: unidade,
-                                      precoUnitario: precoUnit,
-                                      estoqueMinimo: estoqueMin,
+                                      precoUnitario: precoUnitario,
+                                      estoqueMinimo: estoqueMinimo,
                                       quantidadeEmbalagem: quantidade,
-                                      precoEmbalagem: precoEmb,
+                                      precoEmbalagem: precoEmbalagem,
                                     );
                                   }
 
                                   if (mounted) {
-                                    Navigator.of(dialogContext).pop();
+                                    navigator.pop();
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
@@ -271,7 +305,9 @@ class _InsumosPageState extends State<InsumosPage> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: Text(insumo == null ? 'Salvar' : 'Atualizar'),
+                                child: Text(
+                                  insumo == null ? 'Salvar' : 'Atualizar',
+                                ),
                               ),
                             ),
                           ],
@@ -338,7 +374,8 @@ class _InsumosPageState extends State<InsumosPage> {
       backgroundColor: const Color(0xFF050505),
       body: BlocConsumer<InsumosCubit, InsumosState>(
         listener: (context, state) {
-          if (state.errorMessage != null && state.errorMessage!.trim().isNotEmpty) {
+          if (state.errorMessage != null &&
+              state.errorMessage!.trim().isNotEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 backgroundColor: const Color(0xFF1B1B1B),
@@ -356,9 +393,9 @@ class _InsumosPageState extends State<InsumosPage> {
               color: const Color(0xFFFF6B3D),
               backgroundColor: const Color(0xFF111111),
               onRefresh: () => context.read<InsumosCubit>().loadInsumos(
-                    search: state.search,
-                    showLoader: false,
-                  ),
+                search: state.search,
+                showLoader: false,
+              ),
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
                 children: [
@@ -373,10 +410,7 @@ class _InsumosPageState extends State<InsumosPage> {
                   const SizedBox(height: 4),
                   const Text(
                     'Gerencie seus materiais e custos',
-                    style: TextStyle(
-                      color: Color(0xFF7C7C7C),
-                      fontSize: 12.5,
-                    ),
+                    style: TextStyle(color: Color(0xFF7C7C7C), fontSize: 12.5),
                   ),
                   const SizedBox(height: 18),
                   InsumosSearchBar(
@@ -400,7 +434,7 @@ class _InsumosPageState extends State<InsumosPage> {
                     const SizedBox(height: 80),
                     const Center(
                       child: Text(
-                        'Não foi possível carregar os insumos.',
+                        'Nao foi possivel carregar os insumos.',
                         style: TextStyle(color: Colors.white70),
                       ),
                     ),
@@ -438,18 +472,23 @@ class _InsumosPageState extends State<InsumosPage> {
     required String label,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
+    ValueChanged<String>? onChanged,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
+      onChanged: onChanged,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Color(0xFF8A8A8A)),
         filled: true,
         fillColor: const Color(0xFF171717),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF272727)),
@@ -474,7 +513,7 @@ class _InsumosPageState extends State<InsumosPage> {
     required ValueChanged<T?> onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       onChanged: onChanged,
       dropdownColor: const Color(0xFF171717),
       style: const TextStyle(color: Colors.white),
@@ -484,7 +523,10 @@ class _InsumosPageState extends State<InsumosPage> {
         labelStyle: const TextStyle(color: Color(0xFF8A8A8A)),
         filled: true,
         fillColor: const Color(0xFF171717),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF272727)),
@@ -500,10 +542,8 @@ class _InsumosPageState extends State<InsumosPage> {
       ),
       items: items
           .map(
-            (item) => DropdownMenuItem<T>(
-              value: item,
-              child: Text(itemLabel(item)),
-            ),
+            (item) =>
+                DropdownMenuItem<T>(value: item, child: Text(itemLabel(item))),
           )
           .toList(),
     );
