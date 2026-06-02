@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+
+import '../auth/auth_session.dart';
 import 'api_constants.dart';
 
 class ApiClient {
@@ -21,10 +23,12 @@ class ApiClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          final token = accessToken;
+          final token = AuthSession.token ?? accessToken;
+
           if (token != null && token.trim().isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
+
           handler.next(options);
         },
       ),
