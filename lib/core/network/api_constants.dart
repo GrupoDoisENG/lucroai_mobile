@@ -9,7 +9,7 @@ class ApiConstants {
 
   static String insumoById(int id) => '/insumos/$id';
   static String receitaById(int id) => '/receitas/$id';
-  static String vendasDashboard = '/vendas/dashboard';
+  static const String vendasDashboard = '/vendas/dashboard';
 
   static String estoqueByInsumoId(String insumoId) =>
       '/estoque/insumos/$insumoId';

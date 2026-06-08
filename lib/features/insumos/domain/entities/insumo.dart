@@ -1,3 +1,46 @@
+enum InsumoCategoria {
+  graos('graos'),
+  laticinios('laticinios'),
+  carnes('carnes'),
+  hortifruti('hortifruti'),
+  temperos('temperos'),
+  bebidas('bebidas'),
+  embalagens('embalagens'),
+  outros('outros');
+
+  const InsumoCategoria(this.value);
+
+  final String value;
+
+  String get label {
+    switch (this) {
+      case InsumoCategoria.graos:
+        return 'Graos';
+      case InsumoCategoria.laticinios:
+        return 'Laticinios';
+      case InsumoCategoria.carnes:
+        return 'Carnes';
+      case InsumoCategoria.hortifruti:
+        return 'Hortifruti';
+      case InsumoCategoria.temperos:
+        return 'Temperos';
+      case InsumoCategoria.bebidas:
+        return 'Bebidas';
+      case InsumoCategoria.embalagens:
+        return 'Embalagens';
+      case InsumoCategoria.outros:
+        return 'Outros';
+    }
+  }
+
+  static InsumoCategoria fromValue(String value) {
+    return InsumoCategoria.values.firstWhere(
+      (e) => e.value == value,
+      orElse: () => InsumoCategoria.outros,
+    );
+  }
+}
+
 enum InsumoUnidadeMedida {
   gramas('G', 'g'),
   quilogramas('KG', 'kg'),
