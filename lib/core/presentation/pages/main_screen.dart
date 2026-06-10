@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../../features/estoques/presentation/pages/estoques_page.dart';
 import '../../../features/insumos/presentation/pages/calculo_real_screen.dart';
 import '../../../features/insumos/presentation/pages/insumos_page.dart';
@@ -14,21 +15,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _indiceAtual = 1;
-
-  final List<Widget> _paginas = const [
-    Center(
-      child: Text('Home - Em breve', style: TextStyle(color: Colors.white)),
-    ),
-    InsumosPage(),
-    ReceitasPage(),
-    CalculoRealScreen(),
-    VendasPage(),
-    EstoquesPage(),
-    Center(
-      child: Text('Simular - Em breve', style: TextStyle(color: Colors.white)),
-    ),
-  ];
+  int _indiceAtual = 0;
 
   void _aoTocarNoMenu(int index) {
     setState(() {
@@ -40,10 +27,24 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     const primaryOrange = Color(0xFFE85D33);
     const textSecondary = Color(0xFF888888);
+    final paginas = [
+      DashboardPage(onNavigate: _aoTocarNoMenu),
+      const InsumosPage(),
+      const ReceitasPage(),
+      const CalculoRealScreen(),
+      const VendasPage(),
+      const EstoquesPage(),
+      const Center(
+        child: Text(
+          'Simular - Em breve',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+    ];
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
-      body: IndexedStack(index: _indiceAtual, children: _paginas),
+      body: IndexedStack(index: _indiceAtual, children: paginas),
       bottomNavigationBar: Container(
         height: 65,
         color: const Color(0xFF050505),

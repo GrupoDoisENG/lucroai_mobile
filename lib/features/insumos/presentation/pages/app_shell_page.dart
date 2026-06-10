@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../custos/presentation/pages/custos_page.dart';
+import '../../../dashboard/presentation/pages/dashboard_page.dart';
+import '../../../estoques/presentation/cubit/estoques_cubit.dart';
 import '../../../receitas/presentation/cubit/receitas_cubit.dart';
 import '../../../receitas/presentation/pages/receitas_page.dart';
 import '../../../vendas/presentation/cubit/vendas_cubit.dart';
@@ -18,10 +20,17 @@ class AppShellPage extends StatefulWidget {
 }
 
 class _AppShellPageState extends State<AppShellPage> {
-  int _currentIndex = 1;
+  int _currentIndex = 0;
 
   late final List<Widget> _pages = [
-    const _PlaceholderPage(title: 'Home'),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => sl<ReceitasCubit>()),
+        BlocProvider(create: (_) => sl<VendasCubit>()),
+        BlocProvider(create: (_) => sl<EstoquesCubit>()),
+      ],
+      child: DashboardPage(onNavigate: _setCurrentIndex),
+    ),
     const InsumosPage(),
     BlocProvider(
       create: (_) => sl<ReceitasCubit>(),
@@ -33,6 +42,12 @@ class _AppShellPageState extends State<AppShellPage> {
     const _PlaceholderPage(title: 'Simular'),
   ];
 
+  void _setCurrentIndex(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,11 +57,7 @@ class _AppShellPageState extends State<AppShellPage> {
       ),
       bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onTap: _setCurrentIndex,
       ),
     );
   }
@@ -54,7 +65,6 @@ class _AppShellPageState extends State<AppShellPage> {
 
 class _PlaceholderPage extends StatelessWidget {
   final String title;
-
   const _PlaceholderPage({required this.title});
 
   @override
