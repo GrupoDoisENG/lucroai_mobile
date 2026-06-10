@@ -5,6 +5,7 @@ import '../../../features/estoques/presentation/pages/estoques_page.dart';
 import '../../../features/insumos/presentation/pages/calculo_real_screen.dart';
 import '../../../features/insumos/presentation/pages/insumos_page.dart';
 import '../../../features/receitas/presentation/pages/receitas_page.dart';
+import '../../../features/simulacao/presentation/pages/simulacao_page.dart';
 import '../../../features/vendas/presentation/pages/vendas_page.dart';
 
 class MainScreen extends StatefulWidget {
@@ -34,12 +35,7 @@ class _MainScreenState extends State<MainScreen> {
       const CalculoRealScreen(),
       const VendasPage(),
       const EstoquesPage(),
-      const Center(
-        child: Text(
-          'Simular - Em breve',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
+      const SimulacaoPage(),
     ];
 
     return Scaffold(
