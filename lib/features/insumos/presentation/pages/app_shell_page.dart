@@ -65,6 +65,7 @@ class _AppShellPageState extends State<AppShellPage> {
 
 class _PlaceholderPage extends StatelessWidget {
   final String title;
+
   const _PlaceholderPage({required this.title});
 
   @override
