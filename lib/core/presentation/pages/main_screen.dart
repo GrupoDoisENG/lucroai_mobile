@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../../features/estoques/presentation/pages/estoques_page.dart';
-import '../../../features/insumos/presentation/pages/calculo_real_screen.dart';
+import '../../../features/gastos_indiretos/presentation/pages/gastos_indiretos_page.dart';
 import '../../../features/insumos/presentation/pages/insumos_page.dart';
 import '../../../features/receitas/presentation/pages/receitas_page.dart';
 import '../../../features/simulacao/presentation/pages/simulacao_page.dart';
@@ -32,7 +32,7 @@ class _MainScreenState extends State<MainScreen> {
       DashboardPage(onNavigate: _aoTocarNoMenu),
       const InsumosPage(),
       const ReceitasPage(),
-      const CalculoRealScreen(),
+      const GastosIndiretosPage(),
       const VendasPage(),
       const EstoquesPage(),
       const SimulacaoPage(),

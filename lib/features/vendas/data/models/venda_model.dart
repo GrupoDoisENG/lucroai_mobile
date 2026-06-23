@@ -78,27 +78,22 @@ class VendaModel extends Venda {
 }
 
 class CreateVendaRequestModel extends CreateVendaRequest {
-  const CreateVendaRequestModel({
-    required super.empresaId,
-    required super.itens,
-  });
+  const CreateVendaRequestModel({required super.itens});
 
   factory CreateVendaRequestModel.fromEntity(CreateVendaRequest request) {
-    return CreateVendaRequestModel(
-      empresaId: request.empresaId,
-      itens: request.itens,
-    );
+    return CreateVendaRequestModel(itens: request.itens);
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'empresa_id': empresaId,
       'itens': itens
           .map(
             (item) => {
               'receita_id': item.receitaId,
               'quantidade': item.quantidade,
-              'preco_unitario_real': item.precoUnitarioReal,
+              'preco_unitario_real': double.parse(
+                item.precoUnitarioReal.toStringAsFixed(2),
+              ),
             },
           )
           .toList(),

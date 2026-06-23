@@ -12,20 +12,16 @@ class UpdateReceitaUsecase {
     String? nome,
     double? rendimento,
     InsumoUnidadeMedida? unidadeRendimento,
-    double? custoProducao,
-    double? custoUnitario,
     double? margemLucro,
-    double? precoSugerido,
+    List<ReceitaItemInput>? insumos,
   }) {
     return repository.updateReceita(
       id: id,
       nome: nome,
       rendimento: rendimento,
       unidadeRendimento: unidadeRendimento,
-      custoProducao: custoProducao,
-      custoUnitario: custoUnitario,
       margemLucro: margemLucro,
-      precoSugerido: precoSugerido,
+      insumos: insumos,
     );
   }
 }

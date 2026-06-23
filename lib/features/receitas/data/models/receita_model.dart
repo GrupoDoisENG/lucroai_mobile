@@ -18,15 +18,10 @@ class ReceitaItemModel extends ReceitaItem {
     );
   }
 
-  static Map<String, dynamic> toJsonCreate({
-    required int insumoId,
-    required double quantidade,
-    required double custoCalculado,
-  }) {
+  Map<String, dynamic> toJsonCreate() {
     return {
-      'insumoId': insumoId,
+      'insumo_id': insumoId,
       'quantidade': quantidade,
-      'custoCalculado': custoCalculado,
     };
   }
 }
@@ -55,33 +50,33 @@ class ReceitaModel extends Receita {
         (json['unidadeRendimento'] ?? json['unidade_rendimento'] ?? 'UN')
             .toString(),
       ),
-      custoProducao: _toDouble(json['custoProducao'] ?? json['custo_producao']),
-      custoUnitario: _toDouble(json['custoUnitario'] ?? json['custo_unitario']),
+      custoProducao: _toDouble(
+        json['custoProducao'] ?? json['custo_producao'],
+      ),
+      custoUnitario: _toDouble(
+        json['custoUnitario'] ?? json['custo_unitario'],
+      ),
       margemLucro: _toDouble(json['margemLucro'] ?? json['margem_lucro']),
-      precoSugerido: _toDouble(json['precoSugerido'] ?? json['preco_sugerido']),
+      precoSugerido: _toDouble(
+        json['precoSugerido'] ?? json['preco_sugerido'],
+      ),
       itens: _parseItens(json['itens']),
     );
   }
 
   static Map<String, dynamic> toJsonCreate({
-    required int empresaId,
     required String nome,
     required double rendimento,
     required InsumoUnidadeMedida unidadeRendimento,
-    required double custoProducao,
-    required double custoUnitario,
     required double margemLucro,
-    required double precoSugerido,
+    List<ReceitaItemModel> insumos = const [],
   }) {
     return {
-      'empresaId': empresaId,
       'nome': nome,
       'rendimento': rendimento,
       'unidadeRendimento': unidadeRendimento.value,
-      'custoProducao': custoProducao,
-      'custoUnitario': custoUnitario,
-      'margemLucro': margemLucro,
-      'precoSugerido': precoSugerido,
+      if (margemLucro > 0) 'margem_lucro': margemLucro,
+      'insumos': insumos.map((i) => i.toJsonCreate()).toList(),
     };
   }
 
@@ -89,20 +84,17 @@ class ReceitaModel extends Receita {
     String? nome,
     double? rendimento,
     InsumoUnidadeMedida? unidadeRendimento,
-    double? custoProducao,
-    double? custoUnitario,
     double? margemLucro,
-    double? precoSugerido,
+    List<ReceitaItemModel>? insumos,
   }) {
     return {
       if (nome != null) 'nome': nome,
       if (rendimento != null) 'rendimento': rendimento,
       if (unidadeRendimento != null)
         'unidadeRendimento': unidadeRendimento.value,
-      if (custoProducao != null) 'custoProducao': custoProducao,
-      if (custoUnitario != null) 'custoUnitario': custoUnitario,
-      if (margemLucro != null) 'margemLucro': margemLucro,
-      if (precoSugerido != null) 'precoSugerido': precoSugerido,
+      if (margemLucro != null) 'margem_lucro': margemLucro,
+      if (insumos != null)
+        'insumos': insumos.map((i) => i.toJsonCreate()).toList(),
     };
   }
 

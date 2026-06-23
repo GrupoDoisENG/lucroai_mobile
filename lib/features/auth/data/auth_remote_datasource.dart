@@ -17,17 +17,15 @@ class AuthRemoteDatasource {
       },
     );
 
-    final data = _unwrapData(response.data);
-    if (data is String) return data;
+    final body = response.data;
+    if (body is Map<String, dynamic>) {
+      final data = body['data'];
+      if (data is Map<String, dynamic>) {
+        final token = data['access_token'];
+        if (token is String && token.isNotEmpty) return token;
+      }
+    }
 
     throw Exception('Resposta de login invalida');
-  }
-
-  dynamic _unwrapData(dynamic responseData) {
-    if (responseData is Map<String, dynamic> &&
-        responseData.containsKey('data')) {
-      return responseData['data'];
-    }
-    return responseData;
   }
 }

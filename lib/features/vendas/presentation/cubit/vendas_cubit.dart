@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/auth/auth_session.dart';
 import '../../../receitas/domain/usecases/get_receitas_usecase.dart';
 import '../../domain/entities/venda.dart';
 import '../../domain/usecases/criar_venda_usecase.dart';
@@ -17,13 +18,13 @@ class VendasCubit extends Cubit<VendasState> {
     required this.getReceitasUsecase,
   }) : super(VendasState.initial());
 
-  Future<void> loadInitial({int empresaId = 1}) async {
+  Future<void> loadInitial() async {
     emit(state.copyWith(status: VendasStatus.loading, clearErrorMessage: true));
 
     try {
       final receitas = await getReceitasUsecase();
       final vendas = await listarVendasUsecase(
-        empresaId: empresaId,
+        empresaId: AuthSession.empresaId,
         dataInicio: state.dataInicio,
         dataFim: state.dataFim,
       );
@@ -46,7 +47,6 @@ class VendasCubit extends Cubit<VendasState> {
   Future<void> atualizarPeriodo({
     required DateTime dataInicio,
     required DateTime dataFim,
-    int empresaId = 1,
   }) async {
     emit(
       state.copyWith(
@@ -56,13 +56,13 @@ class VendasCubit extends Cubit<VendasState> {
         clearErrorMessage: true,
       ),
     );
-    await carregarHistorico(empresaId: empresaId);
+    await carregarHistorico();
   }
 
-  Future<void> carregarHistorico({int empresaId = 1}) async {
+  Future<void> carregarHistorico() async {
     try {
       final vendas = await listarVendasUsecase(
-        empresaId: empresaId,
+        empresaId: AuthSession.empresaId,
         dataInicio: state.dataInicio,
         dataFim: state.dataFim,
       );
@@ -82,7 +82,6 @@ class VendasCubit extends Cubit<VendasState> {
   }
 
   Future<bool> registrarVenda({
-    required int empresaId,
     required int receitaId,
     required double quantidade,
     required double precoUnitarioReal,
@@ -92,7 +91,6 @@ class VendasCubit extends Cubit<VendasState> {
     try {
       await criarVendaUsecase(
         CreateVendaRequest(
-          empresaId: empresaId,
           itens: [
             CreateVendaItem(
               receitaId: receitaId,
@@ -104,7 +102,7 @@ class VendasCubit extends Cubit<VendasState> {
       );
 
       emit(state.copyWith(isSubmitting: false, clearErrorMessage: true));
-      await carregarHistorico(empresaId: empresaId);
+      await carregarHistorico();
       return true;
     } catch (e) {
       emit(

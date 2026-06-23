@@ -37,9 +37,7 @@ class _InsumosPageState extends State<InsumosPage> {
   }
 
   Future<void> _openFormDialog({Insumo? insumo}) async {
-    final empresaIdController = TextEditingController(
-      text: (insumo?.empresaId ?? 1).toString(),
-    );
+    final cubit = context.read<InsumosCubit>();
     final nomeController = TextEditingController(text: insumo?.nome ?? '');
     final quantidadeController = TextEditingController(
       text: insumo?.quantidade.toString() ?? '',
@@ -56,7 +54,7 @@ class _InsumosPageState extends State<InsumosPage> {
       barrierColor: Colors.black87,
       builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (ctx, setModalState) {
             final quantidade = _parseDouble(quantidadeController.text) ?? 0;
             final valorPago = _parseDouble(valorPagoController.text) ?? 0;
             final custoUnitario = InsumoCustoCalculator.calcularCustoUnitario(
@@ -87,21 +85,6 @@ class _InsumosPageState extends State<InsumosPage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        if (insumo == null) ...[
-                          _buildInput(
-                            controller: empresaIdController,
-                            label: 'Empresa ID',
-                            keyboardType: TextInputType.number,
-                            validator: (value) {
-                              final empresaId = int.tryParse(value ?? '');
-                              if (empresaId == null || empresaId <= 0) {
-                                return 'Informe o ID da empresa';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                        ],
                         _buildInput(
                           controller: nomeController,
                           label: 'Nome',
@@ -214,7 +197,6 @@ class _InsumosPageState extends State<InsumosPage> {
                                   }
 
                                   final navigator = Navigator.of(dialogContext);
-                                  final cubit = context.read<InsumosCubit>();
                                   final nome = nomeController.text.trim();
                                   final quantidade =
                                       _parseDouble(quantidadeController.text) ??
@@ -225,9 +207,6 @@ class _InsumosPageState extends State<InsumosPage> {
 
                                   if (insumo == null) {
                                     await cubit.createInsumo(
-                                      empresaId: int.parse(
-                                        empresaIdController.text.trim(),
-                                      ),
                                       nome: nome,
                                       quantidade: quantidade,
                                       unidade: unidade,
@@ -274,7 +253,6 @@ class _InsumosPageState extends State<InsumosPage> {
       },
     );
 
-    empresaIdController.dispose();
     nomeController.dispose();
     quantidadeController.dispose();
     valorPagoController.dispose();

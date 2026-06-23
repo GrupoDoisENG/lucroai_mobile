@@ -4,13 +4,17 @@ import '../models/estoque_com_insumo_model.dart';
 import '../models/movimentacao_estoque_model.dart';
 
 class EstoqueRemoteDatasource {
-  final Dio dio;
+  final Dio catalogDio;
+  final Dio operationsDio;
 
-  EstoqueRemoteDatasource({required this.dio});
+  EstoqueRemoteDatasource({
+    required this.catalogDio,
+    required this.operationsDio,
+  });
 
   Future<List<EstoqueComInsumoModel>> getEstoques() async {
     try {
-      final insumosResponse = await dio.get(ApiConstants.insumos);
+      final insumosResponse = await catalogDio.get(ApiConstants.insumos);
 
       if (insumosResponse.statusCode == 200) {
         final insumos = _unwrapData(insumosResponse.data) as List<dynamic>;
@@ -44,7 +48,9 @@ class EstoqueRemoteDatasource {
 
   Future<EstoqueComInsumoModel> getEstoqueByInsumoId(String insumoId) async {
     try {
-      final response = await dio.get(ApiConstants.estoqueByInsumoId(insumoId));
+      final response = await operationsDio.get(
+        ApiConstants.estoqueByInsumoId(insumoId),
+      );
 
       if (response.statusCode == 200) {
         final data = _unwrapData(response.data) as Map<String, dynamic>;
@@ -67,7 +73,7 @@ class EstoqueRemoteDatasource {
     required String origem,
   }) async {
     try {
-      await dio.post(
+      await operationsDio.post(
         ApiConstants.estoqueEntradaByInsumoId(insumoId),
         data: {
           'quantidade': quantidade,
@@ -84,9 +90,8 @@ class EstoqueRemoteDatasource {
     required double quantidadeMinima,
   }) async {
     throw UnsupportedError(
-      'O backend atual nao expoe endpoint para atualizar estoque diretamente '
-      '(insumoId: $insumoId, quantidadeDisponivel: $quantidadeDisponivel, '
-      'quantidadeMinima: $quantidadeMinima).',
+      'O backend nao expoe endpoint para atualizar estoque diretamente '
+      '(insumoId: $insumoId).',
     );
   }
 
@@ -98,7 +103,7 @@ class EstoqueRemoteDatasource {
     try {
       if (insumoId == null) return [];
 
-      final response = await dio.get(
+      final response = await operationsDio.get(
         ApiConstants.estoqueMovimentacoesByInsumoId(insumoId),
       );
 

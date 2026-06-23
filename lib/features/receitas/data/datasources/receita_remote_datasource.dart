@@ -4,7 +4,9 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/api_constants.dart';
+import '../../domain/entities/simulacao_result.dart';
 import '../models/receita_model.dart';
+import '../models/simulacao_result_model.dart';
 
 abstract class ReceitaRemoteDatasource {
   Future<List<ReceitaModel>> getReceitas({String? search});
@@ -16,6 +18,8 @@ abstract class ReceitaRemoteDatasource {
   Future<ReceitaModel> updateReceita(int id, Map<String, dynamic> data);
 
   Future<void> deleteReceita(int id);
+
+  Future<SimulacaoResult> simularReceita(int id, Map<String, dynamic> data);
 }
 
 class ReceitaRemoteDatasourceImpl implements ReceitaRemoteDatasource {
@@ -94,6 +98,40 @@ class ReceitaRemoteDatasourceImpl implements ReceitaRemoteDatasource {
     } on DioException catch (e) {
       throw _buildException(e);
     }
+  }
+
+  @override
+  Future<SimulacaoResult> simularReceita(
+    int id,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await dio.post(
+        ApiConstants.receitaSimular(id),
+        data: data,
+      );
+      return SimulacaoResultModel.fromJson(_extractDataMap(response.data));
+    } on DioException catch (e) {
+      throw _buildException(e);
+    }
+  }
+
+  Map<String, dynamic> _extractDataMap(dynamic responseData) {
+    final parsedData = responseData is String
+        ? jsonDecode(responseData)
+        : responseData;
+
+    if (parsedData is Map<String, dynamic>) {
+      if (parsedData['data'] is Map<String, dynamic>) {
+        return parsedData['data'] as Map<String, dynamic>;
+      }
+
+      return parsedData;
+    }
+
+    throw const ServerException(
+      message: 'Formato de resposta invalido.',
+    );
   }
 
   List<dynamic> _extractReceitasList(dynamic responseData) {

@@ -18,7 +18,6 @@ class InsumoRepositoryImpl implements InsumoRepository {
 
   @override
   Future<Insumo> createInsumo({
-    required int empresaId,
     required String nome,
     required double quantidade,
     required InsumoUnidadeMedida unidade,
@@ -26,7 +25,6 @@ class InsumoRepositoryImpl implements InsumoRepository {
   }) {
     return datasource.createInsumo(
       InsumoModel.toJsonCreate(
-        empresaId: empresaId,
         nome: nome,
         quantidade: quantidade,
         unidade: unidade,

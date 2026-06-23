@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../insumos/domain/entities/insumo.dart';
+import '../../domain/entities/receita.dart';
 import '../../domain/usecases/create_receita_usecase.dart';
 import '../../domain/usecases/delete_receita_usecase.dart';
 import '../../domain/usecases/get_receitas_usecase.dart';
@@ -69,27 +70,21 @@ class ReceitasCubit extends Cubit<ReceitasState> {
   }
 
   Future<void> createReceita({
-    required int empresaId,
     required String nome,
     required double rendimento,
     required InsumoUnidadeMedida unidadeRendimento,
-    required double custoProducao,
-    required double custoUnitario,
     required double margemLucro,
-    required double precoSugerido,
+    List<ReceitaItemInput> insumos = const [],
   }) async {
     emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
 
     try {
       await createReceitaUsecase(
-        empresaId: empresaId,
         nome: nome,
         rendimento: rendimento,
         unidadeRendimento: unidadeRendimento,
-        custoProducao: custoProducao,
-        custoUnitario: custoUnitario,
         margemLucro: margemLucro,
-        precoSugerido: precoSugerido,
+        insumos: insumos,
       );
 
       emit(state.copyWith(isSubmitting: false));
@@ -110,10 +105,8 @@ class ReceitasCubit extends Cubit<ReceitasState> {
     String? nome,
     double? rendimento,
     InsumoUnidadeMedida? unidadeRendimento,
-    double? custoProducao,
-    double? custoUnitario,
     double? margemLucro,
-    double? precoSugerido,
+    List<ReceitaItemInput>? insumos,
   }) async {
     emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
 
@@ -123,10 +116,8 @@ class ReceitasCubit extends Cubit<ReceitasState> {
         nome: nome,
         rendimento: rendimento,
         unidadeRendimento: unidadeRendimento,
-        custoProducao: custoProducao,
-        custoUnitario: custoUnitario,
         margemLucro: margemLucro,
-        precoSugerido: precoSugerido,
+        insumos: insumos,
       );
 
       emit(state.copyWith(isSubmitting: false));

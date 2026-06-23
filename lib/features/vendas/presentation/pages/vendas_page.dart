@@ -380,7 +380,6 @@ class _VendasPageState extends State<VendasPage> {
     final messenger = ScaffoldMessenger.of(context);
 
     final success = await cubit.registrarVenda(
-      empresaId: _receitaSelecionada!.empresaId,
       receitaId: _receitaSelecionada!.id,
       quantidade: _quantidade,
       precoUnitarioReal: _precoUnitario,

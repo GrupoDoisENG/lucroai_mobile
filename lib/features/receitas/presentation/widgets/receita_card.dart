@@ -6,12 +6,14 @@ class ReceitaCard extends StatelessWidget {
   final Receita receita;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final VoidCallback onSimular;
 
   const ReceitaCard({
     super.key,
     required this.receita,
     required this.onTap,
     required this.onDelete,
+    required this.onSimular,
   });
 
   @override
@@ -98,6 +100,19 @@ class ReceitaCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    InkWell(
+                      onTap: onSimular,
+                      borderRadius: BorderRadius.circular(20),
+                      child: const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.science_outlined,
+                          size: 17,
+                          color: Color(0xFF7F7F7F),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                     InkWell(
                       onTap: onDelete,
                       borderRadius: BorderRadius.circular(20),

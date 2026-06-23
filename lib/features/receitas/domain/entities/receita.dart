@@ -1,5 +1,12 @@
 import '../../../insumos/domain/entities/insumo.dart';
 
+class ReceitaItemInput {
+  final int insumoId;
+  final double quantidade;
+
+  const ReceitaItemInput({required this.insumoId, required this.quantidade});
+}
+
 class ReceitaItem {
   final int insumoId;
   final double quantidade;

@@ -17,27 +17,29 @@ class InsumoModel extends Insumo {
       id: _toInt(json['id']),
       empresaId: _toInt(json['empresaId'] ?? json['empresa_id']),
       nome: (json['nome'] ?? '').toString(),
-      quantidade: _toDouble(json['quantidade']),
+      quantidade: _toDouble(
+        json['quantidadeBaseCusto'] ?? json['quantidade'],
+      ),
       unidade: InsumoUnidadeMedida.fromValue(
         (json['unidade'] ?? 'UN').toString(),
       ),
       valorPago: _toDouble(json['valorPago'] ?? json['valor_pago']),
-      custoUnitario: _toDouble(json['custoUnitario'] ?? json['custo_unitario']),
+      custoUnitario: _toDouble(
+        json['custoUnitario'] ?? json['custo_unitario'],
+      ),
       dataCriacao: _toDate(json['dataCriacao'] ?? json['data_criacao']),
     );
   }
 
   static Map<String, dynamic> toJsonCreate({
-    required int empresaId,
     required String nome,
     required double quantidade,
     required InsumoUnidadeMedida unidade,
     required double valorPago,
   }) {
     return {
-      'empresaId': empresaId,
       'nome': nome,
-      'quantidade': quantidade,
+      'quantidadeBaseCusto': quantidade,
       'unidade': unidade.value,
       'valorPago': valorPago,
     };
@@ -51,7 +53,7 @@ class InsumoModel extends Insumo {
   }) {
     return {
       if (nome != null) 'nome': nome,
-      if (quantidade != null) 'quantidade': quantidade,
+      if (quantidade != null) 'quantidadeBaseCusto': quantidade,
       if (unidade != null) 'unidade': unidade.value,
       if (valorPago != null) 'valorPago': valorPago,
     };

@@ -49,10 +49,9 @@ class CreateVendaItem {
 }
 
 class CreateVendaRequest {
-  final int empresaId;
   final List<CreateVendaItem> itens;
 
-  const CreateVendaRequest({required this.empresaId, required this.itens});
+  const CreateVendaRequest({required this.itens});
 }
 
 class VendaResumo {
