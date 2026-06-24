@@ -9,6 +9,7 @@ import '../../../estoques/presentation/cubit/estoques_state.dart';
 import '../../../receitas/domain/entities/receita.dart';
 import '../../../receitas/presentation/cubit/receitas_cubit.dart';
 import '../../../receitas/presentation/cubit/receitas_state.dart';
+import '../../../simulacao/presentation/pages/simulacao_page.dart';
 import '../../../vendas/domain/entities/venda.dart';
 import '../../../vendas/presentation/cubit/vendas_cubit.dart';
 import '../../../vendas/presentation/cubit/vendas_state.dart';
@@ -486,14 +487,16 @@ class _DashboardData {
       final fallbackProducts =
           receitas
               .map((receita) {
-                final profit = receita.precoSugerido - receita.custoUnitario;
+                final preco = receita.precoSugerido ?? 0;
+                final custo = receita.custoUnitario ?? 0;
+                final profit = preco - custo;
                 return _ProductProfit(
                   name: receita.nome,
                   quantity: receita.rendimento,
                   profit: profit,
-                  margin: receita.precoSugerido == 0
-                      ? receita.margemLucro * 100
-                      : (profit / receita.precoSugerido) * 100,
+                  margin: preco == 0
+                      ? (receita.margemLucro ?? 0) * 100
+                      : (profit / preco) * 100,
                   hasSales: false,
                 );
               })
@@ -893,7 +896,17 @@ class _QuickActions extends StatelessWidget {
           child: _ActionButton(
             label: 'Simular',
             icon: Icons.science_outlined,
-            onTap: () => onNavigate?.call(6),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => MultiBlocProvider(
+                  providers: [
+                    BlocProvider.value(value: context.read<ReceitasCubit>()),
+                    BlocProvider.value(value: context.read<VendasCubit>()),
+                  ],
+                  child: const SimulacaoPage(),
+                ),
+              ),
+            ),
           ),
         ),
       ],

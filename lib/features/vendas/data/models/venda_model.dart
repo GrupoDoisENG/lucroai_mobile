@@ -7,6 +7,8 @@ class VendaItemModel extends VendaItem {
     required super.quantidade,
     required super.precoUnitarioReal,
     required super.total,
+    super.custoUnitario,
+    super.margemRealizada,
   });
 
   factory VendaItemModel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +26,12 @@ class VendaItemModel extends VendaItem {
       total: _toDouble(json['total'] ?? json['valor_total']) == 0
           ? quantidade * preco
           : _toDouble(json['total'] ?? json['valor_total']),
+      custoUnitario: json['custoUnitario'] != null
+          ? _toDouble(json['custoUnitario'])
+          : null,
+      margemRealizada: json['margemRealizada'] != null
+          ? _toDouble(json['margemRealizada'])
+          : null,
     );
   }
 

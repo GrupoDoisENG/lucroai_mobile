@@ -67,7 +67,7 @@ class ReceitaCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${_formatNumber(receita.rendimento)} ${receita.unidadeRendimento.label} - custo ${_formatCurrency(receita.custoProducao)}',
+                          '${_formatNumber(receita.rendimento)} ${receita.unidadeRendimento.label} - custo ${receita.custoProducao != null ? _formatCurrency(receita.custoProducao!) : '–'}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -84,7 +84,9 @@ class ReceitaCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      _formatCurrency(receita.precoSugerido),
+                      receita.precoSugerido != null
+                          ? _formatCurrency(receita.precoSugerido!)
+                          : '–',
                       style: const TextStyle(
                         color: Color(0xFFFF6B3D),
                         fontSize: 12,
@@ -93,7 +95,9 @@ class ReceitaCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${_formatNumber(receita.margemLucro * 100, decimals: 1)}%',
+                      receita.margemLucro != null
+                          ? '${_formatNumber(receita.margemLucro! * 100, decimals: 1)}%'
+                          : '–',
                       style: const TextStyle(
                         color: Color(0xFF858585),
                         fontSize: 10.5,

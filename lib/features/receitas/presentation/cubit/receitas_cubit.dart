@@ -73,7 +73,7 @@ class ReceitasCubit extends Cubit<ReceitasState> {
     required String nome,
     required double rendimento,
     required InsumoUnidadeMedida unidadeRendimento,
-    required double margemLucro,
+    double? margemLucro,
     List<ReceitaItemInput> insumos = const [],
   }) async {
     emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));

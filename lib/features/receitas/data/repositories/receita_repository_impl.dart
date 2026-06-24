@@ -23,7 +23,7 @@ class ReceitaRepositoryImpl implements ReceitaRepository {
     required String nome,
     required double rendimento,
     required InsumoUnidadeMedida unidadeRendimento,
-    required double margemLucro,
+    double? margemLucro,
     List<ReceitaItemInput> insumos = const [],
   }) {
     return datasource.createReceita(
@@ -37,7 +37,6 @@ class ReceitaRepositoryImpl implements ReceitaRepository {
               (i) => ReceitaItemModel(
                 insumoId: i.insumoId,
                 quantidade: i.quantidade,
-                custoCalculado: 0,
               ),
             )
             .toList(),
@@ -66,7 +65,6 @@ class ReceitaRepositoryImpl implements ReceitaRepository {
               (i) => ReceitaItemModel(
                 insumoId: i.insumoId,
                 quantidade: i.quantidade,
-                custoCalculado: 0,
               ),
             )
             .toList(),

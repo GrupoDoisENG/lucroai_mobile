@@ -9,6 +9,7 @@ class ApiConstants {
   static const String receitas = '/receitas';
   static const String vendas   = '/vendas';
 
+  static String vendaStatus(int id)   => '/vendas/$id/status';
   static String insumoById(int id)    => '/insumos/$id';
   static String receitaById(int id)         => '/receitas/$id';
   static String receitaSimular(int id)      => '/receitas/$id/simular';
@@ -25,4 +26,6 @@ class ApiConstants {
 
   static String estoqueMovimentacoesByInsumoId(String insumoId) =>
       '/estoque/insumos/$insumoId/movimentacoes';
+
+  static const String producoes = '/producoes';
 }

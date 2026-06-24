@@ -17,7 +17,7 @@ class AppBottomNav extends StatelessWidget {
     _NavItemData(label: 'Custos', icon: Icons.calculate_outlined),
     _NavItemData(label: 'Vendas', icon: Icons.show_chart_rounded),
     _NavItemData(label: 'Estoque', icon: Icons.inventory_outlined),
-    _NavItemData(label: 'Simular', icon: Icons.science_outlined),
+    _NavItemData(label: 'Produções', icon: Icons.precision_manufacturing_outlined),
   ];
 
   @override

@@ -69,9 +69,9 @@ class _ReceitasPageState extends State<ReceitasPage> {
       text: receita != null ? receita.rendimento.toString() : '',
     );
     final margemLucroController = TextEditingController(
-      text: receita == null || receita.margemLucro <= 0
+      text: receita == null || (receita.margemLucro ?? 0) <= 0
           ? ''
-          : (receita.margemLucro * 100).toStringAsFixed(0),
+          : (receita.margemLucro! * 100).toStringAsFixed(0),
     );
 
     InsumoUnidadeMedida unidadeRendimento =
@@ -237,16 +237,18 @@ class _ReceitasPageState extends State<ReceitasPage> {
                                   Expanded(
                                     child: _buildReadOnlyInfo(
                                       label: 'Custo producao',
-                                      value:
-                                          'R\$ ${receita.custoProducao.toStringAsFixed(2)}',
+                                      value: receita.custoProducao != null
+                                          ? 'R\$ ${receita.custoProducao!.toStringAsFixed(2)}'
+                                          : '–',
                                     ),
                                   ),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: _buildReadOnlyInfo(
                                       label: 'Custo unitario',
-                                      value:
-                                          'R\$ ${receita.custoUnitario.toStringAsFixed(2)}',
+                                      value: receita.custoUnitario != null
+                                          ? 'R\$ ${receita.custoUnitario!.toStringAsFixed(2)}'
+                                          : '–',
                                     ),
                                   ),
                                 ],
@@ -254,8 +256,9 @@ class _ReceitasPageState extends State<ReceitasPage> {
                               const SizedBox(height: 8),
                               _buildReadOnlyInfo(
                                 label: 'Preco sugerido',
-                                value:
-                                    'R\$ ${receita.precoSugerido.toStringAsFixed(2)}',
+                                value: receita.precoSugerido != null
+                                    ? 'R\$ ${receita.precoSugerido!.toStringAsFixed(2)}'
+                                    : '–',
                               ),
                             ],
                             const SizedBox(height: 18),
@@ -297,8 +300,9 @@ class _ReceitasPageState extends State<ReceitasPage> {
                                       final margemRaw = _parseDouble(
                                         margemLucroController.text,
                                       );
-                                      final margemLucro =
-                                          (margemRaw ?? 0) / 100;
+                                      final margemLucro = margemRaw != null
+                                          ? margemRaw / 100
+                                          : null;
                                       final insumos = insumosEntries
                                           .map(
                                             (e) => ReceitaItemInput(

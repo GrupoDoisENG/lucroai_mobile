@@ -10,12 +10,12 @@ class ReceitaItemInput {
 class ReceitaItem {
   final int insumoId;
   final double quantidade;
-  final double custoCalculado;
+  final double? custoCalculado;
 
   const ReceitaItem({
     required this.insumoId,
     required this.quantidade,
-    required this.custoCalculado,
+    this.custoCalculado,
   });
 }
 
@@ -25,10 +25,11 @@ class Receita {
   final String nome;
   final double rendimento;
   final InsumoUnidadeMedida unidadeRendimento;
-  final double custoProducao;
-  final double custoUnitario;
-  final double margemLucro;
-  final double precoSugerido;
+  final double? custoProducao;
+  final double? custoUnitario;
+  final double? margemLucro;
+  final double? precoSugerido;
+  final DateTime dataCriacao;
   final List<ReceitaItem> itens;
 
   const Receita({
@@ -37,10 +38,11 @@ class Receita {
     required this.nome,
     required this.rendimento,
     required this.unidadeRendimento,
-    required this.custoProducao,
-    required this.custoUnitario,
-    required this.margemLucro,
-    required this.precoSugerido,
+    required this.dataCriacao,
+    this.custoProducao,
+    this.custoUnitario,
+    this.margemLucro,
+    this.precoSugerido,
     this.itens = const [],
   });
 }

@@ -74,11 +74,22 @@ class VendaCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                venda.status,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Color(0xFF858585), fontSize: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _statusColor(venda.status).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  _statusLabel(venda.status),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: _statusColor(venda.status),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -101,5 +112,21 @@ class VendaCard extends StatelessWidget {
     final day = value.day.toString().padLeft(2, '0');
     final month = value.month.toString().padLeft(2, '0');
     return '$day/$month/${value.year}';
+  }
+
+  static Color _statusColor(String status) {
+    return switch (status.toUpperCase()) {
+      'CONCLUIDA' => const Color(0xFF4CAF50),
+      'CANCELADA' => const Color(0xFFE53935),
+      _ => const Color(0xFFFFB300),
+    };
+  }
+
+  static String _statusLabel(String status) {
+    return switch (status.toUpperCase()) {
+      'CONCLUIDA' => 'Concluida',
+      'CANCELADA' => 'Cancelada',
+      _ => 'Pendente',
+    };
   }
 }

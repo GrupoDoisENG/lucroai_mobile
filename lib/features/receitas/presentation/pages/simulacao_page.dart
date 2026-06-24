@@ -24,13 +24,13 @@ class _SimulacaoPageState extends State<SimulacaoPage> {
   void initState() {
     super.initState();
     _custoController = TextEditingController(
-      text: widget.receita.custoUnitario > 0
-          ? widget.receita.custoUnitario.toStringAsFixed(2)
+      text: (widget.receita.custoUnitario ?? 0) > 0
+          ? widget.receita.custoUnitario!.toStringAsFixed(2)
           : '',
     );
     _precoController = TextEditingController(
-      text: widget.receita.precoSugerido > 0
-          ? widget.receita.precoSugerido.toStringAsFixed(2)
+      text: (widget.receita.precoSugerido ?? 0) > 0
+          ? widget.receita.precoSugerido!.toStringAsFixed(2)
           : '',
     );
     _volumeController = TextEditingController(

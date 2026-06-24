@@ -5,14 +5,14 @@ class ReceitaItemModel extends ReceitaItem {
   const ReceitaItemModel({
     required super.insumoId,
     required super.quantidade,
-    required super.custoCalculado,
+    super.custoCalculado,
   });
 
   factory ReceitaItemModel.fromJson(Map<String, dynamic> json) {
     return ReceitaItemModel(
       insumoId: _toInt(json['insumoId'] ?? json['insumo_id']),
       quantidade: _toDouble(json['quantidade']),
-      custoCalculado: _toDouble(
+      custoCalculado: _toDoubleOrNull(
         json['custoCalculado'] ?? json['custo_calculado'],
       ),
     );
@@ -33,10 +33,11 @@ class ReceitaModel extends Receita {
     required super.nome,
     required super.rendimento,
     required super.unidadeRendimento,
-    required super.custoProducao,
-    required super.custoUnitario,
-    required super.margemLucro,
-    required super.precoSugerido,
+    required super.dataCriacao,
+    super.custoProducao,
+    super.custoUnitario,
+    super.margemLucro,
+    super.precoSugerido,
     super.itens,
   });
 
@@ -50,16 +51,22 @@ class ReceitaModel extends Receita {
         (json['unidadeRendimento'] ?? json['unidade_rendimento'] ?? 'UN')
             .toString(),
       ),
-      custoProducao: _toDouble(
+      custoProducao: _toDoubleOrNull(
         json['custoProducao'] ?? json['custo_producao'],
       ),
-      custoUnitario: _toDouble(
+      custoUnitario: _toDoubleOrNull(
         json['custoUnitario'] ?? json['custo_unitario'],
       ),
-      margemLucro: _toDouble(json['margemLucro'] ?? json['margem_lucro']),
-      precoSugerido: _toDouble(
+      margemLucro: _toDoubleOrNull(
+        json['margemLucro'] ?? json['margem_lucro'],
+      ),
+      precoSugerido: _toDoubleOrNull(
         json['precoSugerido'] ?? json['preco_sugerido'],
       ),
+      dataCriacao: DateTime.tryParse(
+            (json['dataCriacao'] ?? json['data_criacao'] ?? '').toString(),
+          ) ??
+          DateTime.now(),
       itens: _parseItens(json['itens']),
     );
   }
@@ -68,14 +75,14 @@ class ReceitaModel extends Receita {
     required String nome,
     required double rendimento,
     required InsumoUnidadeMedida unidadeRendimento,
-    required double margemLucro,
+    double? margemLucro,
     List<ReceitaItemModel> insumos = const [],
   }) {
     return {
       'nome': nome,
       'rendimento': rendimento,
       'unidadeRendimento': unidadeRendimento.value,
-      if (margemLucro > 0) 'margem_lucro': margemLucro,
+      if (margemLucro != null) 'margem_lucro': margemLucro,
       'insumos': insumos.map((i) => i.toJsonCreate()).toList(),
     };
   }
@@ -118,4 +125,10 @@ int _toInt(dynamic value) {
 double _toDouble(dynamic value) {
   if (value is num) return value.toDouble();
   return double.tryParse(value?.toString().replaceAll(',', '.') ?? '') ?? 0;
+}
+
+double? _toDoubleOrNull(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString().replaceAll(',', '.'));
 }

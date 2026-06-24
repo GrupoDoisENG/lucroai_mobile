@@ -41,9 +41,16 @@ import '../../features/receitas/domain/usecases/simular_receita_usecase.dart';
 import '../../features/receitas/domain/usecases/update_receita_usecase.dart';
 import '../../features/receitas/presentation/cubit/receitas_cubit.dart';
 import '../../features/receitas/presentation/cubit/simulacao_cubit.dart';
+import '../../features/producoes/data/datasources/producao_remote_datasource.dart';
+import '../../features/producoes/data/repositories/producao_repository_impl.dart';
+import '../../features/producoes/domain/repositories/producao_repository.dart';
+import '../../features/producoes/domain/usecases/listar_producoes_usecase.dart';
+import '../../features/producoes/domain/usecases/registrar_producao_usecase.dart';
+import '../../features/producoes/presentation/cubit/producoes_cubit.dart';
 import '../../features/vendas/data/datasources/venda_remote_datasource.dart';
 import '../../features/vendas/data/repositories/venda_repository_impl.dart';
 import '../../features/vendas/domain/repositories/venda_repository.dart';
+import '../../features/vendas/domain/usecases/atualizar_status_venda_usecase.dart';
 import '../../features/vendas/domain/usecases/criar_venda_usecase.dart';
 import '../../features/vendas/domain/usecases/listar_vendas_usecase.dart';
 import '../../features/vendas/presentation/cubit/vendas_cubit.dart';
@@ -113,6 +120,12 @@ void initDependencies({required SharedPreferences prefs}) {
   sl.registerLazySingleton<VendaRepository>(
     () => VendaRepositoryImpl(datasource: sl()),
   );
+  sl.registerLazySingleton(
+    () => ProducaoRemoteDatasource(operationsDio: sl(instanceName: 'operations')),
+  );
+  sl.registerLazySingleton<ProducaoRepository>(
+    () => ProducaoRepositoryImpl(datasource: sl()),
+  );
   sl.registerLazySingleton<EstoqueRepository>(
     () => EstoqueRepositoryImpl(remoteDatasource: sl()),
   );
@@ -137,6 +150,10 @@ void initDependencies({required SharedPreferences prefs}) {
 
   sl.registerLazySingleton(() => CriarVendaUsecase(sl()));
   sl.registerLazySingleton(() => ListarVendasUsecase(sl()));
+  sl.registerLazySingleton(() => AtualizarStatusVendaUsecase(sl()));
+
+  sl.registerLazySingleton(() => RegistrarProducaoUsecase(sl()));
+  sl.registerLazySingleton(() => ListarProducoesUsecase(sl()));
 
   sl.registerLazySingleton(() => GetEstoquesUsecase(sl()));
   sl.registerLazySingleton(() => RegistrarEntradaEstoqueUsecase(sl()));
@@ -178,6 +195,17 @@ void initDependencies({required SharedPreferences prefs}) {
       criarVendaUsecase: sl(),
       listarVendasUsecase: sl(),
       getReceitasUsecase: sl(),
+      atualizarStatusVendaUsecase: sl(),
+      listarProducoesUsecase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => ProducoesCubit(
+      registrarProducaoUsecase: sl(),
+      listarProducoesUsecase: sl(),
+      getReceitasUsecase: sl(),
+      getGastosIndiretosUsecase: sl(),
     ),
   );
 

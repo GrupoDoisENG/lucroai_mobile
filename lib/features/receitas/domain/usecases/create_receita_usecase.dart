@@ -11,7 +11,7 @@ class CreateReceitaUsecase {
     required String nome,
     required double rendimento,
     required InsumoUnidadeMedida unidadeRendimento,
-    required double margemLucro,
+    double? margemLucro,
     List<ReceitaItemInput> insumos = const [],
   }) {
     return repository.createReceita(

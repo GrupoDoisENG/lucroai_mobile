@@ -81,7 +81,7 @@ class ReceitaRemoteDatasourceImpl implements ReceitaRemoteDatasource {
   @override
   Future<ReceitaModel> updateReceita(int id, Map<String, dynamic> data) async {
     try {
-      final response = await dio.patch(
+      final response = await dio.put(
         ApiConstants.receitaById(id),
         data: data,
       );
