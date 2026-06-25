@@ -1,9 +1,11 @@
 class ApiConstants {
-  static const String authBaseUrl       = 'http://localhost:3001';
-  static const String catalogBaseUrl    = 'http://localhost:3002';
-  static const String recipeBaseUrl     = 'http://localhost:3003';
-  static const String operationsBaseUrl = 'http://localhost:3004';
-  static const String salesBaseUrl      = 'http://localhost:3005';
+  // Android emulator: 10.0.2.2 = host (localhost da máquina).
+  // Em web/desktop troque para 'localhost'.
+  static const String authBaseUrl       = 'http://10.0.2.2:3001';
+  static const String catalogBaseUrl    = 'http://10.0.2.2:3002';
+  static const String recipeBaseUrl     = 'http://10.0.2.2:3003';
+  static const String operationsBaseUrl = 'http://10.0.2.2:3004';
+  static const String salesBaseUrl      = 'http://10.0.2.2:3005';
 
   static const String insumos  = '/insumos';
   static const String receitas = '/receitas';

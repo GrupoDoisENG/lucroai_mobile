@@ -39,22 +39,34 @@ class Venda {
     this.itens = const [],
   });
 
-  bool get isCancelada {
-    final normalized = status
-        .trim()
-        .toLowerCase()
-        .replaceAll('í', 'i')
-        .replaceAll('ú', 'u')
-        .replaceAll('ã', 'a')
-        .replaceAll('ç', 'c');
+  String get _statusNormalizado => status
+      .trim()
+      .toLowerCase()
+      .replaceAll('í', 'i')
+      .replaceAll('ú', 'u')
+      .replaceAll('ã', 'a')
+      .replaceAll('ç', 'c');
 
+  bool get isCancelada {
+    final normalized = _statusNormalizado;
     return normalized == 'cancelada' ||
         normalized == 'cancelado' ||
         normalized == 'canceled' ||
         normalized == 'cancelled';
   }
 
-  bool get isFaturavel => !isCancelada;
+  bool get isConcluida {
+    final normalized = _statusNormalizado;
+    return normalized == 'concluida' ||
+        normalized == 'concluido' ||
+        normalized == 'completed' ||
+        normalized == 'finalizada';
+  }
+
+  /// Apenas vendas concluídas entram no faturamento.
+  /// Vendas PENDENTE ainda não representam receita realizada e
+  /// CANCELADA nunca conta.
+  bool get isFaturavel => isConcluida;
 }
 
 class CreateVendaItem {

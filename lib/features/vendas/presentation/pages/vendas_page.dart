@@ -746,7 +746,7 @@ class _ConfirmacaoSheetState extends State<_ConfirmacaoSheet> {
       return;
     }
 
-    await _acao('CONCLUIDA', 'Venda concluida com sucesso.');
+    await _acao('CONCLUIDA', 'Venda concluída com sucesso.');
   }
 
   Future<void> _acao(String status, String mensagem) async {

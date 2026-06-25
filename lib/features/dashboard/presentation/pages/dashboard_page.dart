@@ -87,7 +87,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           const SizedBox(height: 22),
                           _buildKpis(dashboard),
                           const SizedBox(height: 24),
-                          const _SectionTitle(title: 'Evolucao mensal'),
+                          const _SectionTitle(title: 'Evolução mensal'),
                           const SizedBox(height: 12),
                           _ChartCard(
                             values: dashboard.monthlyValues,
@@ -95,7 +95,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             trendLabel: dashboard.monthlyTrendLabel,
                           ),
                           const SizedBox(height: 24),
-                          const _SectionTitle(title: 'Acoes rapidas'),
+                          const _SectionTitle(title: 'Ações rápidas'),
                           const SizedBox(height: 12),
                           _QuickActions(onNavigate: widget.onNavigate),
                           const SizedBox(height: 24),
@@ -103,7 +103,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             children: [
                               const Expanded(
                                 child: _SectionTitle(
-                                  title: 'Produtos mais rentaveis',
+                                  title: 'Produtos mais rentáveis',
                                 ),
                               ),
                               TextButton.icon(
@@ -217,7 +217,7 @@ class _DashboardPageState extends State<DashboardPage> {
             _KpiCard(
               title: 'Faturamento',
               value: _formatCurrency(dashboard.revenue),
-              detail: 'Periodo atual',
+              detail: 'Período atual',
               icon: Icons.attach_money,
               accentColor: DashboardPage._primary,
               detailColor: DashboardPage._success,
@@ -235,7 +235,7 @@ class _DashboardPageState extends State<DashboardPage> {
             _KpiCard(
               title: 'Vendas',
               value: dashboard.salesLastSevenDays.toString(),
-              detail: 'Ultimos 7 dias',
+              detail: 'Últimos 7 dias',
               icon: Icons.shopping_cart_outlined,
               accentColor: DashboardPage._primary,
               detailColor: DashboardPage._textMuted,
@@ -244,8 +244,8 @@ class _DashboardPageState extends State<DashboardPage> {
               title: 'Estoque baixo',
               value: dashboard.lowStockCount.toString(),
               detail: dashboard.lowStockCount == 1
-                  ? 'Item critico'
-                  : 'Itens criticos',
+                  ? 'Item crítico'
+                  : 'Itens críticos',
               icon: Icons.warning_amber_rounded,
               accentColor: DashboardPage._primary,
               detailColor: dashboard.lowStockCount == 0
@@ -567,7 +567,7 @@ class _ProductProfit {
   });
 
   String get unitsLabel {
-    if (!hasSales) return 'sem vendas no periodo';
+    if (!hasSales) return 'sem vendas no período';
     final displayQuantity = quantity % 1 == 0
         ? quantity.toInt().toString()
         : quantity.toStringAsFixed(1).replaceAll('.', ',');
@@ -722,7 +722,7 @@ class _ChartCard extends StatelessWidget {
             children: [
               const Expanded(
                 child: Text(
-                  'Receita dos ultimos 6 meses',
+                  'Receita dos últimos 6 meses',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -893,13 +893,13 @@ class _QuickActions extends StatelessWidget {
           onTap: () => onNavigate?.call(2),
         ),
         _ActionButton(
-          label: 'Producao',
+          label: 'Produção',
           icon: Icons.precision_manufacturing_outlined,
           onTap: () => onNavigate?.call(6),
         ),
         _ActionButton(
-          label: 'Simular',
-          icon: Icons.science_outlined,
+          label: 'Gastos',
+          icon: Icons.receipt_long_outlined,
           onTap: () => onNavigate?.call(7),
         ),
       ],

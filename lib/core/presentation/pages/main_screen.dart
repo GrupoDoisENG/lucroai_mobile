@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../../features/estoques/presentation/pages/estoques_page.dart';
+import '../../../features/gastos_indiretos/presentation/pages/gastos_indiretos_page.dart';
 import '../../../features/insumos/presentation/pages/calculo_real_screen.dart';
 import '../../../features/insumos/presentation/pages/insumos_page.dart';
 import '../../../features/producoes/presentation/pages/producoes_page.dart';
 import '../../../features/receitas/presentation/pages/receitas_page.dart';
-import '../../../features/simulacao/presentation/pages/simulacao_page.dart';
 import '../../../features/vendas/presentation/pages/vendas_page.dart';
 
 class MainScreen extends StatefulWidget {
@@ -37,18 +37,21 @@ class _MainScreenState extends State<MainScreen> {
       VendasPage(onNavigate: _aoTocarNoMenu),
       const EstoquesPage(),
       const ProducoesPage(),
-      SimulacaoPage(onNavigate: _aoTocarNoMenu),
+      const GastosIndiretosPage(),
     ];
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
       body: IndexedStack(index: _indiceAtual, children: paginas),
       bottomNavigationBar: Container(
-        height: 65,
         color: const Color(0xFF050505),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 65,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
             _buildNavIcon(
               Icons.grid_view,
               'Home',
@@ -93,19 +96,21 @@ class _MainScreenState extends State<MainScreen> {
             ),
             _buildNavIcon(
               Icons.precision_manufacturing_outlined,
-              'Producao',
+              'Produção',
               6,
               textSecondary,
               primaryOrange,
             ),
             _buildNavIcon(
-              Icons.science_outlined,
-              'Simular',
+              Icons.receipt_long_outlined,
+              'Gastos',
               7,
               textSecondary,
               primaryOrange,
             ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
