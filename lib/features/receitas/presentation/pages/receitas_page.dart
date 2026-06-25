@@ -78,12 +78,14 @@ class _ReceitasPageState extends State<ReceitasPage> {
         receita?.unidadeRendimento ?? InsumoUnidadeMedida.unidades;
     final formKey = GlobalKey<FormState>();
 
-    final List<_InsumoEntry> insumosEntries = receita?.itens
+    final List<_InsumoEntry> insumosEntries =
+        receita?.itens
             .map(
               (item) => _InsumoEntry(
                 insumoId: item.insumoId,
-                quantidadeController:
-                    TextEditingController(text: item.quantidade.toString()),
+                quantidadeController: TextEditingController(
+                  text: item.quantidade.toString(),
+                ),
               ),
             )
             .toList() ??
@@ -142,19 +144,18 @@ class _ReceitasPageState extends State<ReceitasPage> {
                                     label: 'Rendimento',
                                     keyboardType:
                                         const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
+                                          decimal: true,
+                                        ),
                                     validator: (value) =>
                                         _validatePositiveNumber(
-                                      value,
-                                      'Obrigatorio',
-                                    ),
+                                          value,
+                                          'Obrigatorio',
+                                        ),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
-                                  child:
-                                      _buildDropdown<InsumoUnidadeMedida>(
+                                  child: _buildDropdown<InsumoUnidadeMedida>(
                                     label: 'Unidade',
                                     value: unidadeRendimento,
                                     items: InsumoUnidadeMedida.values,
@@ -176,8 +177,8 @@ class _ReceitasPageState extends State<ReceitasPage> {
                               label: 'Margem de lucro (%)',
                               keyboardType:
                                   const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
+                                    decimal: true,
+                                  ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
                                   return null;
@@ -289,8 +290,9 @@ class _ReceitasPageState extends State<ReceitasPage> {
                                         return;
                                       }
 
-                                      final navigator =
-                                          Navigator.of(dialogContext);
+                                      final navigator = Navigator.of(
+                                        dialogContext,
+                                      );
                                       final nome = nomeController.text.trim();
                                       final rendimento =
                                           _parseDouble(
@@ -406,8 +408,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
         onPressed: available.isEmpty
             ? null
             : () async {
-                final entry =
-                    await _showAddInsumoDialog(available: available);
+                final entry = await _showAddInsumoDialog(available: available);
                 if (entry != null) {
                   setModalState(() => insumosEntries.add(entry));
                 }
@@ -478,8 +479,9 @@ class _ReceitasPageState extends State<ReceitasPage> {
             width: 80,
             child: TextFormField(
               controller: entry.quantidadeController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               style: const TextStyle(color: Colors.white, fontSize: 13),
               textAlign: TextAlign.center,
               validator: (v) => _validatePositiveNumber(v, 'Invalido'),
@@ -582,8 +584,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: 'Quantidade',
-                          labelStyle:
-                              const TextStyle(color: Color(0xFF8A8A8A)),
+                          labelStyle: const TextStyle(color: Color(0xFF8A8A8A)),
                           filled: true,
                           fillColor: const Color(0xFF171717),
                           contentPadding: const EdgeInsets.symmetric(
@@ -592,18 +593,21 @@ class _ReceitasPageState extends State<ReceitasPage> {
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                const BorderSide(color: Color(0xFF272727)),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF272727),
+                            ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                const BorderSide(color: Color(0xFF272727)),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF272727),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFFF6B3D)),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFFF6B3D),
+                            ),
                           ),
                         ),
                       ),
@@ -755,8 +759,7 @@ class _ReceitasPageState extends State<ReceitasPage> {
                   const SizedBox(height: 4),
                   const Text(
                     'Gerencie insumos, rendimento, margem e custo automatico',
-                    style:
-                        TextStyle(color: Color(0xFF7C7C7C), fontSize: 12.5),
+                    style: TextStyle(color: Color(0xFF7C7C7C), fontSize: 12.5),
                   ),
                   const SizedBox(height: 18),
                   ReceitasSearchBar(
@@ -917,10 +920,8 @@ class _ReceitasPageState extends State<ReceitasPage> {
       ),
       items: items
           .map(
-            (item) => DropdownMenuItem<T>(
-              value: item,
-              child: Text(itemLabel(item)),
-            ),
+            (item) =>
+                DropdownMenuItem<T>(value: item, child: Text(itemLabel(item))),
           )
           .toList(),
     );

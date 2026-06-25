@@ -19,10 +19,7 @@ class ReceitaItemModel extends ReceitaItem {
   }
 
   Map<String, dynamic> toJsonCreate() {
-    return {
-      'insumo_id': insumoId,
-      'quantidade': quantidade,
-    };
+    return {'insumo_id': insumoId, 'quantidade': quantidade};
   }
 }
 
@@ -57,13 +54,12 @@ class ReceitaModel extends Receita {
       custoUnitario: _toDoubleOrNull(
         json['custoUnitario'] ?? json['custo_unitario'],
       ),
-      margemLucro: _toDoubleOrNull(
-        json['margemLucro'] ?? json['margem_lucro'],
-      ),
+      margemLucro: _toDoubleOrNull(json['margemLucro'] ?? json['margem_lucro']),
       precoSugerido: _toDoubleOrNull(
         json['precoSugerido'] ?? json['preco_sugerido'],
       ),
-      dataCriacao: DateTime.tryParse(
+      dataCriacao:
+          DateTime.tryParse(
             (json['dataCriacao'] ?? json['data_criacao'] ?? '').toString(),
           ) ??
           DateTime.now(),

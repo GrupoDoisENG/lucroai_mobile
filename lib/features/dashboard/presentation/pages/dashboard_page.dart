@@ -9,7 +9,6 @@ import '../../../estoques/presentation/cubit/estoques_state.dart';
 import '../../../receitas/domain/entities/receita.dart';
 import '../../../receitas/presentation/cubit/receitas_cubit.dart';
 import '../../../receitas/presentation/cubit/receitas_state.dart';
-import '../../../simulacao/presentation/pages/simulacao_page.dart';
 import '../../../vendas/domain/entities/venda.dart';
 import '../../../vendas/presentation/cubit/vendas_cubit.dart';
 import '../../../vendas/presentation/cubit/vendas_state.dart';
@@ -321,7 +320,9 @@ class _DashboardData {
     required List<Receita> receitas,
     required List<EstoqueComInsumo> estoques,
   }) {
-    final vendas = vendasState.vendas;
+    final vendas = vendasState.vendas
+        .where((venda) => venda.isFaturavel)
+        .toList();
     final receitaById = {for (final receita in receitas) receita.id: receita};
     final receitaByName = {
       for (final receita in receitas)
@@ -372,13 +373,13 @@ class _DashboardData {
     if (venda.itens.isNotEmpty) {
       return venda.itens.fold<double>(0, (sum, item) {
         final receita = receitaById[item.receitaId];
-        final cost = (receita?.custoUnitario ?? 0) * item.quantidade;
+        final cost = (receita?.custoUnitario ?? 0.0) * item.quantidade;
         return sum + item.total - cost;
       });
     }
 
     final receita = receitaByName[venda.produto.trim().toLowerCase()];
-    final unitCost = receita?.custoUnitario ?? 0;
+    final unitCost = receita?.custoUnitario ?? 0.0;
     return venda.total - (unitCost * venda.quantidade);
   }
 
@@ -448,7 +449,7 @@ class _DashboardData {
       if (venda.itens.isEmpty) {
         final receita = receitaByName[venda.produto.trim().toLowerCase()];
         final profit =
-            venda.total - ((receita?.custoUnitario ?? 0) * venda.quantidade);
+            venda.total - ((receita?.custoUnitario ?? 0.0) * venda.quantidade);
         final revenue = venda.total;
         products.update(
           venda.produto,
@@ -469,7 +470,7 @@ class _DashboardData {
             ? item.produto
             : receita?.nome ?? 'Produto';
         final profit =
-            item.total - ((receita?.custoUnitario ?? 0) * item.quantidade);
+            item.total - ((receita?.custoUnitario ?? 0.0) * item.quantidade);
         products.update(
           name,
           (current) => current.add(item.quantidade, item.total, profit),
@@ -487,15 +488,15 @@ class _DashboardData {
       final fallbackProducts =
           receitas
               .map((receita) {
-                final preco = receita.precoSugerido ?? 0;
-                final custo = receita.custoUnitario ?? 0;
+                final preco = receita.precoSugerido ?? 0.0;
+                final custo = receita.custoUnitario ?? 0.0;
                 final profit = preco - custo;
                 return _ProductProfit(
                   name: receita.nome,
                   quantity: receita.rendimento,
                   profit: profit,
                   margin: preco == 0
-                      ? (receita.margemLucro ?? 0) * 100
+                      ? (receita.margemLucro ?? 0.0) * 100
                       : (profit / preco) * 100,
                   hasSales: false,
                 );
@@ -873,41 +874,33 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return GridView.count(
+      crossAxisCount: 2,
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      childAspectRatio: 3.2,
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
       children: [
-        Expanded(
-          child: _ActionButton(
-            label: 'Novo Insumo',
-            icon: Icons.add_box_outlined,
-            isPrimary: true,
-            onTap: () => onNavigate?.call(1),
-          ),
+        _ActionButton(
+          label: 'Novo Insumo',
+          icon: Icons.add_box_outlined,
+          onTap: () => onNavigate?.call(1),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _ActionButton(
-            label: 'Nova Receita',
-            icon: Icons.restaurant_menu_outlined,
-            onTap: () => onNavigate?.call(2),
-          ),
+        _ActionButton(
+          label: 'Nova Receita',
+          icon: Icons.restaurant_menu_outlined,
+          onTap: () => onNavigate?.call(2),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _ActionButton(
-            label: 'Simular',
-            icon: Icons.science_outlined,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => MultiBlocProvider(
-                  providers: [
-                    BlocProvider.value(value: context.read<ReceitasCubit>()),
-                    BlocProvider.value(value: context.read<VendasCubit>()),
-                  ],
-                  child: const SimulacaoPage(),
-                ),
-              ),
-            ),
-          ),
+        _ActionButton(
+          label: 'Producao',
+          icon: Icons.precision_manufacturing_outlined,
+          onTap: () => onNavigate?.call(6),
+        ),
+        _ActionButton(
+          label: 'Simular',
+          icon: Icons.science_outlined,
+          onTap: () => onNavigate?.call(7),
         ),
       ],
     );
@@ -918,39 +911,26 @@ class _ActionButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final VoidCallback onTap;
-  final bool isPrimary;
 
   const _ActionButton({
     required this.label,
     required this.icon,
     required this.onTap,
-    this.isPrimary = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final background = isPrimary
-        ? DashboardPage._primary
-        : DashboardPage._surfaceAlt;
-    return SizedBox(
-      height: 58,
-      child: ElevatedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, size: 17),
-        label: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(label, maxLines: 1),
-        ),
-        style: ElevatedButton.styleFrom(
-          elevation: 0,
-          backgroundColor: background,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-        ),
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 17),
+      label: FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1)),
+      style: ElevatedButton.styleFrom(
+        elevation: 0,
+        backgroundColor: DashboardPage._primary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -1009,8 +989,7 @@ class _ProfitableProductTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-        
-    value,
+            value,
             maxLines: 1,
             style: const TextStyle(
               color: DashboardPage._success,

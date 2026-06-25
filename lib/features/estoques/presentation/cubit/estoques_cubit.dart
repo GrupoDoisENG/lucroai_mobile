@@ -38,24 +38,31 @@ class EstoquesCubit extends Cubit<EstoquesState> {
     try {
       final estoques = await getEstoques();
       _currentEstoques = estoques;
-      
+
       // Aplicar filtros
       List<EstoqueComInsumo> filtered = estoques;
       if (_filterBaixoEstoque == true) {
         filtered = filtered.where((e) => e.isBaixoEstoque).toList();
       }
       if (_search != null && _search!.isNotEmpty) {
-        filtered = filtered.where((e) => 
-          e.insumoNome.toLowerCase().contains(_search!.toLowerCase()) ||
-          e.insumoCategoria.toLowerCase().contains(_search!.toLowerCase())
-        ).toList();
+        filtered = filtered
+            .where(
+              (e) =>
+                  e.insumoNome.toLowerCase().contains(_search!.toLowerCase()) ||
+                  e.insumoCategoria.toLowerCase().contains(
+                    _search!.toLowerCase(),
+                  ),
+            )
+            .toList();
       }
 
-      emit(EstoquesLoaded(
-        estoques: filtered,
-        filterBaixoEstoque: _filterBaixoEstoque,
-        search: _search,
-      ));
+      emit(
+        EstoquesLoaded(
+          estoques: filtered,
+          filterBaixoEstoque: _filterBaixoEstoque,
+          search: _search,
+        ),
+      );
     } catch (e) {
       emit(EstoquesError(e.toString()));
     }
@@ -83,15 +90,19 @@ class EstoquesCubit extends Cubit<EstoquesState> {
         origem: OrigemMovimentacao.compra,
       );
       await loadEstoques();
-      emit(EstoqueActionSuccess(
-        estoques: _currentEstoques,
-        message: 'Entrada de estoque registrada com sucesso',
-      ));
+      emit(
+        EstoqueActionSuccess(
+          estoques: _currentEstoques,
+          message: 'Entrada de estoque registrada com sucesso',
+        ),
+      );
     } catch (e) {
-      emit(EstoqueActionError(
-        estoques: _currentEstoques,
-        message: 'Erro ao registrar entrada: ${e.toString()}',
-      ));
+      emit(
+        EstoqueActionError(
+          estoques: _currentEstoques,
+          message: 'Erro ao registrar entrada: ${e.toString()}',
+        ),
+      );
     }
   }
 

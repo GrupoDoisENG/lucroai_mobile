@@ -10,8 +10,10 @@ import '../../../producoes/presentation/cubit/producoes_cubit.dart';
 import '../../../producoes/presentation/pages/producoes_page.dart';
 import '../../../receitas/presentation/cubit/receitas_cubit.dart';
 import '../../../receitas/presentation/pages/receitas_page.dart';
+import '../../../simulacao/presentation/pages/simulacao_page.dart';
 import '../../../vendas/presentation/cubit/vendas_cubit.dart';
 import '../../../vendas/presentation/pages/vendas_page.dart';
+import '../cubit/insumos_cubit.dart';
 import '../widgets/app_bottom_nav.dart';
 import 'insumos_page.dart';
 
@@ -35,12 +37,18 @@ class _AppShellPageState extends State<AppShellPage> {
       child: DashboardPage(onNavigate: _setCurrentIndex),
     ),
     const InsumosPage(),
-    BlocProvider(
-      create: (_) => sl<ReceitasCubit>(),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => sl<ReceitasCubit>()),
+        BlocProvider(create: (_) => sl<InsumosCubit>()),
+      ],
       child: const ReceitasPage(),
     ),
     const CustosPage(),
-    BlocProvider(create: (_) => sl<VendasCubit>(), child: const VendasPage()),
+    BlocProvider(
+      create: (_) => sl<VendasCubit>(),
+      child: VendasPage(onNavigate: _setCurrentIndex),
+    ),
     BlocProvider(
       create: (_) => sl<EstoquesCubit>(),
       child: const EstoquesPage(),
@@ -48,6 +56,13 @@ class _AppShellPageState extends State<AppShellPage> {
     BlocProvider(
       create: (_) => sl<ProducoesCubit>(),
       child: const ProducoesPage(),
+    ),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => sl<ReceitasCubit>()),
+        BlocProvider(create: (_) => sl<VendasCubit>()),
+      ],
+      child: SimulacaoPage(onNavigate: _setCurrentIndex),
     ),
   ];
 
@@ -71,4 +86,3 @@ class _AppShellPageState extends State<AppShellPage> {
     );
   }
 }
-

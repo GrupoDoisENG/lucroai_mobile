@@ -48,6 +48,7 @@ class _InsumosPageState extends State<InsumosPage> {
 
     InsumoUnidadeMedida unidade = insumo?.unidade ?? InsumoUnidadeMedida.gramas;
     final formKey = GlobalKey<FormState>();
+    var isSubmitting = false;
 
     await showDialog<void>(
       context: context,
@@ -109,8 +110,8 @@ class _InsumosPageState extends State<InsumosPage> {
                                 onChanged: (_) => setModalState(() {}),
                                 validator: (value) {
                                   final quantidade = _parseDouble(value ?? '');
-                                  if (quantidade == null || quantidade < 0) {
-                                    return 'Obrigatorio';
+                                  if (quantidade == null || quantidade <= 0) {
+                                    return 'Informe uma quantidade maior que zero';
                                   }
                                   return null;
                                 },
@@ -144,8 +145,8 @@ class _InsumosPageState extends State<InsumosPage> {
                           onChanged: (_) => setModalState(() {}),
                           validator: (value) {
                             final valorPago = _parseDouble(value ?? '');
-                            if (valorPago == null || valorPago < 0) {
-                              return 'Obrigatorio';
+                            if (valorPago == null || valorPago <= 0) {
+                              return 'Informe um valor maior que zero';
                             }
                             return null;
                           },
@@ -191,41 +192,78 @@ class _InsumosPageState extends State<InsumosPage> {
                             const SizedBox(width: 10),
                             Expanded(
                               child: ElevatedButton(
-                                onPressed: () async {
-                                  if (!formKey.currentState!.validate()) {
-                                    return;
-                                  }
+                                onPressed: isSubmitting
+                                    ? null
+                                    : () async {
+                                        if (!formKey.currentState!.validate()) {
+                                          return;
+                                        }
 
-                                  final navigator = Navigator.of(dialogContext);
-                                  final nome = nomeController.text.trim();
-                                  final quantidade =
-                                      _parseDouble(quantidadeController.text) ??
-                                      0;
-                                  final valorPago =
-                                      _parseDouble(valorPagoController.text) ??
-                                      0;
+                                        setModalState(() {
+                                          isSubmitting = true;
+                                        });
 
-                                  if (insumo == null) {
-                                    await cubit.createInsumo(
-                                      nome: nome,
-                                      quantidade: quantidade,
-                                      unidade: unidade,
-                                      valorPago: valorPago,
-                                    );
-                                  } else {
-                                    await cubit.updateInsumo(
-                                      id: insumo.id,
-                                      nome: nome,
-                                      quantidade: quantidade,
-                                      unidade: unidade,
-                                      valorPago: valorPago,
-                                    );
-                                  }
+                                        final navigator = Navigator.of(
+                                          dialogContext,
+                                        );
+                                        final messenger = ScaffoldMessenger.of(
+                                          context,
+                                        );
+                                        final nome = nomeController.text.trim();
+                                        final quantidade =
+                                            _parseDouble(
+                                              quantidadeController.text,
+                                            ) ??
+                                            0;
+                                        final valorPago =
+                                            _parseDouble(
+                                              valorPagoController.text,
+                                            ) ??
+                                            0;
+                                        var success = false;
 
-                                  if (dialogContext.mounted) {
-                                    navigator.pop();
-                                  }
-                                },
+                                        if (insumo == null) {
+                                          success = await cubit.createInsumo(
+                                            nome: nome,
+                                            quantidade: quantidade,
+                                            unidade: unidade,
+                                            valorPago: valorPago,
+                                          );
+                                        } else {
+                                          success = await cubit.updateInsumo(
+                                            id: insumo.id,
+                                            nome: nome,
+                                            quantidade: quantidade,
+                                            unidade: unidade,
+                                            valorPago: valorPago,
+                                          );
+                                        }
+
+                                        if (!dialogContext.mounted) return;
+
+                                        setModalState(() {
+                                          isSubmitting = false;
+                                        });
+
+                                        if (success) {
+                                          messenger.showSnackBar(
+                                            SnackBar(
+                                              backgroundColor: const Color(
+                                                0xFF1B1B1B,
+                                              ),
+                                              content: Text(
+                                                insumo == null
+                                                    ? 'Insumo criado com sucesso.'
+                                                    : 'Insumo atualizado com sucesso.',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                          navigator.pop();
+                                        }
+                                      },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFFF6B3D),
                                   foregroundColor: Colors.white,
@@ -235,9 +273,18 @@ class _InsumosPageState extends State<InsumosPage> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: Text(
-                                  insumo == null ? 'Salvar' : 'Atualizar',
-                                ),
+                                child: isSubmitting
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
+                                        insumo == null ? 'Salvar' : 'Atualizar',
+                                      ),
                               ),
                             ),
                           ],
@@ -291,7 +338,22 @@ class _InsumosPageState extends State<InsumosPage> {
     );
 
     if (confirmed == true && mounted) {
-      await context.read<InsumosCubit>().deleteInsumo(insumo.id);
+      final messenger = ScaffoldMessenger.of(context);
+      final success = await context.read<InsumosCubit>().deleteInsumo(
+        insumo.id,
+      );
+
+      if (success && mounted) {
+        messenger.showSnackBar(
+          const SnackBar(
+            backgroundColor: Color(0xFF1B1B1B),
+            content: Text(
+              'Insumo excluido com sucesso.',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -307,7 +369,7 @@ class _InsumosPageState extends State<InsumosPage> {
               SnackBar(
                 backgroundColor: const Color(0xFF1B1B1B),
                 content: Text(
-                  state.errorMessage!,
+                  _friendlyError(state.errorMessage!),
                   style: const TextStyle(color: Colors.white),
                 ),
               ),
@@ -484,6 +546,14 @@ class _InsumosPageState extends State<InsumosPage> {
       return null;
     }
     return double.tryParse(normalized);
+  }
+
+  String _friendlyError(String error) {
+    return error
+        .replaceFirst('ServerException: ', '')
+        .replaceFirst('NetworkException: ', '')
+        .replaceFirst('Exception: ', '')
+        .replaceFirst(RegExp(r' \(status: .*?\)$'), '');
   }
 
   static String _formatUnitPrice(double value, String unidade) {

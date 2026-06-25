@@ -11,6 +11,7 @@ import 'features/auth/presentation/pages/login_page.dart';
 import 'features/estoques/presentation/cubit/estoques_cubit.dart';
 import 'features/gastos_indiretos/presentation/cubit/gastos_indiretos_cubit.dart';
 import 'features/insumos/presentation/cubit/insumos_cubit.dart';
+import 'features/producoes/presentation/cubit/producoes_cubit.dart';
 import 'features/receitas/presentation/cubit/receitas_cubit.dart';
 import 'features/vendas/presentation/cubit/vendas_cubit.dart';
 
@@ -95,9 +96,7 @@ class _AuthGateState extends State<AuthGate> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (!AuthSession.isAuthenticated) {
@@ -111,6 +110,7 @@ class _AuthGateState extends State<AuthGate> {
         BlocProvider(create: (_) => sl<VendasCubit>()),
         BlocProvider(create: (_) => sl<EstoquesCubit>()),
         BlocProvider(create: (_) => sl<GastosIndiretosCubit>()),
+        BlocProvider(create: (_) => sl<ProducoesCubit>()),
       ],
       child: const MainScreen(),
     );

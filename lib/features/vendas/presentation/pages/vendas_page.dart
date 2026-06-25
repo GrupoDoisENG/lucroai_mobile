@@ -9,7 +9,9 @@ import '../widgets/venda_card.dart';
 import '../widgets/venda_summary_card.dart';
 
 class VendasPage extends StatefulWidget {
-  const VendasPage({super.key});
+  final ValueChanged<int>? onNavigate;
+
+  const VendasPage({super.key, this.onNavigate});
 
   @override
   State<VendasPage> createState() => _VendasPageState();
@@ -58,8 +60,9 @@ class _VendasPageState extends State<VendasPage> {
     setState(() {
       _receitaSelecionada = receita;
       if (receita?.precoSugerido != null && receita!.precoSugerido! > 0) {
-        _precoController.text =
-            receita.precoSugerido!.toStringAsFixed(2).replaceAll('.', ',');
+        _precoController.text = receita.precoSugerido!
+            .toStringAsFixed(2)
+            .replaceAll('.', ',');
       } else {
         _precoController.clear();
       }
@@ -150,6 +153,13 @@ class _VendasPageState extends State<VendasPage> {
                     _friendlyError(state.errorMessage!),
                     style: const TextStyle(color: Colors.white),
                   ),
+                  action: _isStockError(state.errorMessage!)
+                      ? SnackBarAction(
+                          label: 'Produção',
+                          textColor: const Color(0xFFFF6B3D),
+                          onPressed: () => widget.onNavigate?.call(6),
+                        )
+                      : null,
                 ),
               );
             }
@@ -173,7 +183,7 @@ class _VendasPageState extends State<VendasPage> {
                   const Padding(
                     padding: EdgeInsets.fromLTRB(18, 4, 18, 14),
                     child: Text(
-                      'Registre vendas e acompanhe o historico',
+                      'Registre vendas e acompanhe o histórico',
                       style: TextStyle(
                         color: Color(0xFF7C7C7C),
                         fontSize: 12.5,
@@ -266,9 +276,9 @@ class _VendasPageState extends State<VendasPage> {
                 Expanded(
                   child: _buildInput(
                     controller: _precoController,
-                    label: 'Preco unitario',
-                    validator: (v) =>
-                        _validatePositiveNumber(v, 'Informe o preco'),
+                    label: 'Preço unitário real',
+                    validator: (value) =>
+                        _validatePositiveNumber(value, 'Informe o preço'),
                   ),
                 ),
               ],
@@ -441,6 +451,10 @@ class _VendasPageState extends State<VendasPage> {
   }
 
   Widget _buildHistorico(BuildContext context, VendasState state) {
+    final receitaNomeById = {
+      for (final receita in state.receitas) receita.id: receita.nome,
+    };
+
     return RefreshIndicator(
       color: const Color(0xFFFF6B3D),
       backgroundColor: const Color(0xFF111111),
@@ -499,7 +513,7 @@ class _VendasPageState extends State<VendasPage> {
             Center(
               child: Text(
                 _friendlyError(
-                  state.errorMessage ?? 'Nao foi possivel carregar as vendas.',
+                  state.errorMessage ?? 'Não foi possível carregar as vendas.',
                 ),
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white70),
@@ -509,7 +523,7 @@ class _VendasPageState extends State<VendasPage> {
             const SizedBox(height: 80),
             const Center(
               child: Text(
-                'Nenhuma venda encontrada no periodo.',
+                'Nenhuma venda encontrada no período.',
                 style: TextStyle(color: Colors.white70),
               ),
             ),
@@ -517,7 +531,10 @@ class _VendasPageState extends State<VendasPage> {
             ...state.vendas.map(
               (venda) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: VendaCard(venda: venda),
+                child: VendaCard(
+                  venda: venda,
+                  produtoNome: _resolveProdutoNome(venda, receitaNomeById),
+                ),
               ),
             ),
           ],
@@ -526,9 +543,27 @@ class _VendasPageState extends State<VendasPage> {
     );
   }
 
+  String? _resolveProdutoNome(Venda venda, Map<int, String> receitaNomeById) {
+    if (venda.produto.trim().isNotEmpty && venda.produto != 'Venda') {
+      return venda.produto;
+    }
+
+    if (venda.itens.isEmpty) return null;
+
+    return venda.itens
+        .map((item) {
+          if (item.produto.trim().isNotEmpty) return item.produto;
+          return receitaNomeById[item.receitaId] ?? '';
+        })
+        .where((nome) => nome.trim().isNotEmpty)
+        .join(', ');
+  }
+
   Widget _buildReceitaDropdown(List<Receita> receitas) {
     return DropdownButtonFormField<Receita>(
-      initialValue: receitas.contains(_receitaSelecionada) ? _receitaSelecionada : null,
+      initialValue: receitas.contains(_receitaSelecionada)
+          ? _receitaSelecionada
+          : null,
       onChanged: _onReceitaChanged,
       validator: (value) {
         if (value == null) return 'Selecione um produto';
@@ -635,9 +670,28 @@ class _VendasPageState extends State<VendasPage> {
 
   String _friendlyError(String error) {
     if (error.contains('401') || error.toLowerCase().contains('unauthorized')) {
-      return 'Sessao expirada. Faca login novamente.';
+      return 'Sessão expirada. Faça login novamente.';
+    }
+
+    if (_isStockError(error)) {
+      return 'Estoque insuficiente para registrar a venda. Cadastre a produção do item em Produções.';
     }
     return error.replaceFirst('Exception: ', '');
+  }
+
+  bool _isStockError(String error) {
+    final normalized = error
+        .toLowerCase()
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ã', 'a')
+        .replaceAll('ç', 'c');
+
+    return normalized.contains('estoque') &&
+        (normalized.contains('insuficiente') ||
+            normalized.contains('indisponivel') ||
+            normalized.contains('nao ha') ||
+            normalized.contains('sem estoque'));
   }
 }
 
@@ -677,10 +731,7 @@ class _ConfirmacaoSheetState extends State<_ConfirmacaoSheet> {
             'Estoque insuficiente',
             style: TextStyle(color: Colors.white),
           ),
-          content: Text(
-            erro,
-            style: const TextStyle(color: Color(0xFFCCCCCC)),
-          ),
+          content: Text(erro, style: const TextStyle(color: Color(0xFFCCCCCC))),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -838,9 +889,7 @@ class _ConfirmacaoSheetState extends State<_ConfirmacaoSheet> {
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: _loading
-                  ? null
-                  : _concluirComValidacao,
+              onPressed: _loading ? null : _concluirComValidacao,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF6B3D),
                 foregroundColor: Colors.white,

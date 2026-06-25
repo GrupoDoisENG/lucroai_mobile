@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../../features/estoques/presentation/pages/estoques_page.dart';
-import '../../../features/gastos_indiretos/presentation/pages/gastos_indiretos_page.dart';
+import '../../../features/insumos/presentation/pages/calculo_real_screen.dart';
 import '../../../features/insumos/presentation/pages/insumos_page.dart';
+import '../../../features/producoes/presentation/pages/producoes_page.dart';
 import '../../../features/receitas/presentation/pages/receitas_page.dart';
 import '../../../features/simulacao/presentation/pages/simulacao_page.dart';
 import '../../../features/vendas/presentation/pages/vendas_page.dart';
@@ -32,10 +33,11 @@ class _MainScreenState extends State<MainScreen> {
       DashboardPage(onNavigate: _aoTocarNoMenu),
       const InsumosPage(),
       const ReceitasPage(),
-      const GastosIndiretosPage(),
-      const VendasPage(),
+      const CalculoRealScreen(),
+      VendasPage(onNavigate: _aoTocarNoMenu),
       const EstoquesPage(),
-      const SimulacaoPage(),
+      const ProducoesPage(),
+      SimulacaoPage(onNavigate: _aoTocarNoMenu),
     ];
 
     return Scaffold(
@@ -90,9 +92,16 @@ class _MainScreenState extends State<MainScreen> {
               primaryOrange,
             ),
             _buildNavIcon(
+              Icons.precision_manufacturing_outlined,
+              'Producao',
+              6,
+              textSecondary,
+              primaryOrange,
+            ),
+            _buildNavIcon(
               Icons.science_outlined,
               'Simular',
-              6,
+              7,
               textSecondary,
               primaryOrange,
             ),
