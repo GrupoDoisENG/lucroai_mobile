@@ -59,7 +59,7 @@ class VendaRemoteDatasourceImpl implements VendaRemoteDatasource {
       rethrow;
     } on Object {
       throw const ServerException(
-        message: 'Formato de resposta invalido ao buscar vendas.',
+        message: 'Formato de resposta inválido ao buscar vendas.',
       );
     }
   }
@@ -82,7 +82,7 @@ class VendaRemoteDatasourceImpl implements VendaRemoteDatasource {
     }
 
     throw const ServerException(
-      message: 'Formato de resposta invalido ao buscar vendas.',
+      message: 'Formato de resposta inválido ao buscar vendas.',
     );
   }
 
@@ -100,7 +100,7 @@ class VendaRemoteDatasourceImpl implements VendaRemoteDatasource {
     }
 
     throw const ServerException(
-      message: 'Formato de resposta invalido ao ler venda.',
+      message: 'Formato de resposta inválido ao ler venda.',
     );
   }
 
@@ -116,7 +116,7 @@ class VendaRemoteDatasourceImpl implements VendaRemoteDatasource {
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.connectionError) {
       return NetworkException(
-        message: 'Sem conexao com o servidor: ${e.message}',
+        message: 'Sem conexão com o servidor: ${e.message}',
       );
     }
 

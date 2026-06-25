@@ -67,7 +67,7 @@ class _GastosIndiretosPageState extends State<GastosIndiretosPage> {
                         ),
                         const SizedBox(height: 6),
                         const Text(
-                          'Este gasto sera rateado em todas as receitas.',
+                          'Este gasto será rateado em todas as receitas.',
                           style: TextStyle(
                             color: Color(0xFF7C7C7C),
                             fontSize: 12,
