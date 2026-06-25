@@ -5,10 +5,13 @@ import '../../../../core/di/injection_container.dart';
 import '../../../custos/presentation/pages/custos_page.dart';
 import '../../../dashboard/presentation/pages/dashboard_page.dart';
 import '../../../estoques/presentation/cubit/estoques_cubit.dart';
+import '../../../estoques/presentation/pages/estoques_page.dart';
 import '../../../receitas/presentation/cubit/receitas_cubit.dart';
 import '../../../receitas/presentation/pages/receitas_page.dart';
+import '../../../simulacao/presentation/pages/simulacao_page.dart';
 import '../../../vendas/presentation/cubit/vendas_cubit.dart';
 import '../../../vendas/presentation/pages/vendas_page.dart';
+import '../cubit/insumos_cubit.dart';
 import '../widgets/app_bottom_nav.dart';
 import 'insumos_page.dart';
 
@@ -32,14 +35,29 @@ class _AppShellPageState extends State<AppShellPage> {
       child: DashboardPage(onNavigate: _setCurrentIndex),
     ),
     const InsumosPage(),
-    BlocProvider(
-      create: (_) => sl<ReceitasCubit>(),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => sl<ReceitasCubit>()),
+        BlocProvider(create: (_) => sl<InsumosCubit>()),
+      ],
       child: const ReceitasPage(),
     ),
     const CustosPage(),
-    BlocProvider(create: (_) => sl<VendasCubit>(), child: const VendasPage()),
-    const _PlaceholderPage(title: 'Estoque'),
-    const _PlaceholderPage(title: 'Simular'),
+    BlocProvider(
+      create: (_) => sl<VendasCubit>(),
+      child: VendasPage(onNavigate: _setCurrentIndex),
+    ),
+    BlocProvider(
+      create: (_) => sl<EstoquesCubit>(),
+      child: const EstoquesPage(),
+    ),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => sl<ReceitasCubit>()),
+        BlocProvider(create: (_) => sl<VendasCubit>()),
+      ],
+      child: SimulacaoPage(onNavigate: _setCurrentIndex),
+    ),
   ];
 
   void _setCurrentIndex(int index) {
@@ -58,28 +76,6 @@ class _AppShellPageState extends State<AppShellPage> {
       bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
         onTap: _setCurrentIndex,
-      ),
-    );
-  }
-}
-
-class _PlaceholderPage extends StatelessWidget {
-  final String title;
-
-  const _PlaceholderPage({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF050505),
-      alignment: Alignment.center,
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.white70,
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }

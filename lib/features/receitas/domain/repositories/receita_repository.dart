@@ -15,6 +15,7 @@ abstract class ReceitaRepository {
     required double custoUnitario,
     required double margemLucro,
     required double precoSugerido,
+    List<ReceitaItem> itens = const [],
   });
 
   Future<Receita> updateReceita({
@@ -26,6 +27,7 @@ abstract class ReceitaRepository {
     double? custoUnitario,
     double? margemLucro,
     double? precoSugerido,
+    List<ReceitaItem>? itens,
   });
 
   Future<void> deleteReceita(int id);

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../insumos/domain/entities/insumo.dart';
+import '../../domain/entities/receita.dart';
 import '../../domain/usecases/create_receita_usecase.dart';
 import '../../domain/usecases/delete_receita_usecase.dart';
 import '../../domain/usecases/get_receitas_usecase.dart';
@@ -77,6 +78,7 @@ class ReceitasCubit extends Cubit<ReceitasState> {
     required double custoUnitario,
     required double margemLucro,
     required double precoSugerido,
+    List<ReceitaItem> itens = const [],
   }) async {
     emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
 
@@ -90,6 +92,7 @@ class ReceitasCubit extends Cubit<ReceitasState> {
         custoUnitario: custoUnitario,
         margemLucro: margemLucro,
         precoSugerido: precoSugerido,
+        itens: itens,
       );
 
       emit(state.copyWith(isSubmitting: false));
@@ -114,6 +117,7 @@ class ReceitasCubit extends Cubit<ReceitasState> {
     double? custoUnitario,
     double? margemLucro,
     double? precoSugerido,
+    List<ReceitaItem>? itens,
   }) async {
     emit(state.copyWith(isSubmitting: true, clearErrorMessage: true));
 
@@ -127,6 +131,7 @@ class ReceitasCubit extends Cubit<ReceitasState> {
         custoUnitario: custoUnitario,
         margemLucro: margemLucro,
         precoSugerido: precoSugerido,
+        itens: itens,
       );
 
       emit(state.copyWith(isSubmitting: false));

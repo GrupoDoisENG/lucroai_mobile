@@ -27,6 +27,7 @@ class ReceitaRepositoryImpl implements ReceitaRepository {
     required double custoUnitario,
     required double margemLucro,
     required double precoSugerido,
+    List<ReceitaItem> itens = const [],
   }) {
     return datasource.createReceita(
       ReceitaModel.toJsonCreate(
@@ -38,6 +39,7 @@ class ReceitaRepositoryImpl implements ReceitaRepository {
         custoUnitario: custoUnitario,
         margemLucro: margemLucro,
         precoSugerido: precoSugerido,
+        itens: itens,
       ),
     );
   }
@@ -52,6 +54,7 @@ class ReceitaRepositoryImpl implements ReceitaRepository {
     double? custoUnitario,
     double? margemLucro,
     double? precoSugerido,
+    List<ReceitaItem>? itens,
   }) {
     return datasource.updateReceita(
       id,
@@ -63,6 +66,7 @@ class ReceitaRepositoryImpl implements ReceitaRepository {
         custoUnitario: custoUnitario,
         margemLucro: margemLucro,
         precoSugerido: precoSugerido,
+        itens: itens,
       ),
     );
   }

@@ -16,6 +16,7 @@ class CreateReceitaUsecase {
     required double custoUnitario,
     required double margemLucro,
     required double precoSugerido,
+    List<ReceitaItem> itens = const [],
   }) {
     return repository.createReceita(
       empresaId: empresaId,
@@ -26,6 +27,7 @@ class CreateReceitaUsecase {
       custoUnitario: custoUnitario,
       margemLucro: margemLucro,
       precoSugerido: precoSugerido,
+      itens: itens,
     );
   }
 }

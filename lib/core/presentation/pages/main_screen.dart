@@ -33,9 +33,9 @@ class _MainScreenState extends State<MainScreen> {
       const InsumosPage(),
       const ReceitasPage(),
       const CalculoRealScreen(),
-      const VendasPage(),
+      VendasPage(onNavigate: _aoTocarNoMenu),
       const EstoquesPage(),
-      const SimulacaoPage(),
+      SimulacaoPage(onNavigate: _aoTocarNoMenu),
     ];
 
     return Scaffold(

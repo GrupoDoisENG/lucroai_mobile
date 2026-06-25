@@ -11,7 +11,9 @@ import '../../../vendas/presentation/cubit/vendas_cubit.dart';
 import '../../../vendas/presentation/cubit/vendas_state.dart';
 
 class SimulacaoPage extends StatefulWidget {
-  const SimulacaoPage({super.key});
+  final ValueChanged<int>? onNavigate;
+
+  const SimulacaoPage({super.key, this.onNavigate});
 
   static const _background = Color(0xFF050505);
   static const _surface = Color(0xFF141414);
@@ -73,7 +75,7 @@ class _SimulacaoPageState extends State<SimulacaoPage> {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
                     children: [
-                      _Header(isLoading: isLoading),
+                      _Header(isLoading: isLoading, onBack: _goBack),
                       const SizedBox(height: 20),
                       if (receitas.isEmpty)
                         _EmptySimulationState(
@@ -228,6 +230,15 @@ class _SimulacaoPageState extends State<SimulacaoPage> {
     ]);
   }
 
+  void _goBack() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    widget.onNavigate?.call(0);
+  }
+
   _Range _priceRangeFor(Receita receita) {
     final basePrice = receita.precoSugerido > 0
         ? receita.precoSugerido
@@ -289,7 +300,7 @@ class _ScenarioBase {
     var quantity = 0.0;
     var revenue = 0.0;
 
-    for (final venda in vendas) {
+    for (final venda in vendas.where((venda) => venda.isFaturavel)) {
       if (venda.itens.isEmpty) {
         if (venda.produto.trim().toLowerCase() ==
             receita.nome.trim().toLowerCase()) {
@@ -339,14 +350,27 @@ class _Range {
 
 class _Header extends StatelessWidget {
   final bool isLoading;
+  final VoidCallback onBack;
 
-  const _Header({required this.isLoading});
+  const _Header({required this.isLoading, required this.onBack});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 10, top: 2),
+          child: IconButton(
+            onPressed: onBack,
+            tooltip: 'Voltar',
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            style: IconButton.styleFrom(
+              backgroundColor: SimulacaoPage._surface,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ),
         const Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

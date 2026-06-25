@@ -320,7 +320,9 @@ class _DashboardData {
     required List<Receita> receitas,
     required List<EstoqueComInsumo> estoques,
   }) {
-    final vendas = vendasState.vendas;
+    final vendas = vendasState.vendas
+        .where((venda) => venda.isFaturavel)
+        .toList();
     final receitaById = {for (final receita in receitas) receita.id: receita};
     final receitaByName = {
       for (final receita in receitas)
@@ -870,33 +872,41 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _ActionButton(
-            label: 'Novo Insumo',
-            icon: Icons.add_box_outlined,
-            isPrimary: true,
-            onTap: () => onNavigate?.call(1),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _ActionButton(
-            label: 'Nova Receita',
-            icon: Icons.restaurant_menu_outlined,
-            onTap: () => onNavigate?.call(2),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _ActionButton(
-            label: 'Simular',
-            icon: Icons.science_outlined,
-            onTap: () => onNavigate?.call(6),
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 520;
+
+        return GridView.count(
+          crossAxisCount: isWide ? 4 : 2,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: isWide ? 2.3 : 2.5,
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          children: [
+            _ActionButton(
+              label: 'Novo Insumo',
+              icon: Icons.add_box_outlined,
+              onTap: () => onNavigate?.call(1),
+            ),
+            _ActionButton(
+              label: 'Nova Receita',
+              icon: Icons.restaurant_menu_outlined,
+              onTap: () => onNavigate?.call(2),
+            ),
+            _ActionButton(
+              label: 'Produção',
+              icon: Icons.inventory_2_outlined,
+              onTap: () => onNavigate?.call(5),
+            ),
+            _ActionButton(
+              label: 'Simular',
+              icon: Icons.science_outlined,
+              onTap: () => onNavigate?.call(6),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -905,39 +915,26 @@ class _ActionButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final VoidCallback onTap;
-  final bool isPrimary;
 
   const _ActionButton({
     required this.label,
     required this.icon,
     required this.onTap,
-    this.isPrimary = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final background = isPrimary
-        ? DashboardPage._primary
-        : DashboardPage._surfaceAlt;
-    return SizedBox(
-      height: 58,
-      child: ElevatedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, size: 17),
-        label: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(label, maxLines: 1),
-        ),
-        style: ElevatedButton.styleFrom(
-          elevation: 0,
-          backgroundColor: background,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-        ),
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 17),
+      label: FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1)),
+      style: ElevatedButton.styleFrom(
+        elevation: 0,
+        backgroundColor: DashboardPage._primary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -996,8 +993,7 @@ class _ProfitableProductTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-        
-    value,
+            value,
             maxLines: 1,
             style: const TextStyle(
               color: DashboardPage._success,

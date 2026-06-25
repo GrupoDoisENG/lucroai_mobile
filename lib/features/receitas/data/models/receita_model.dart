@@ -72,6 +72,7 @@ class ReceitaModel extends Receita {
     required double custoUnitario,
     required double margemLucro,
     required double precoSugerido,
+    List<ReceitaItem> itens = const [],
   }) {
     return {
       'empresaId': empresaId,
@@ -82,6 +83,15 @@ class ReceitaModel extends Receita {
       'custoUnitario': custoUnitario,
       'margemLucro': margemLucro,
       'precoSugerido': precoSugerido,
+      'itens': itens
+          .map(
+            (item) => ReceitaItemModel.toJsonCreate(
+              insumoId: item.insumoId,
+              quantidade: item.quantidade,
+              custoCalculado: item.custoCalculado,
+            ),
+          )
+          .toList(),
     };
   }
 
@@ -93,6 +103,7 @@ class ReceitaModel extends Receita {
     double? custoUnitario,
     double? margemLucro,
     double? precoSugerido,
+    List<ReceitaItem>? itens,
   }) {
     return {
       if (nome != null) 'nome': nome,
@@ -103,6 +114,16 @@ class ReceitaModel extends Receita {
       if (custoUnitario != null) 'custoUnitario': custoUnitario,
       if (margemLucro != null) 'margemLucro': margemLucro,
       if (precoSugerido != null) 'precoSugerido': precoSugerido,
+      if (itens != null)
+        'itens': itens
+            .map(
+              (item) => ReceitaItemModel.toJsonCreate(
+                insumoId: item.insumoId,
+                quantidade: item.quantidade,
+                custoCalculado: item.custoCalculado,
+              ),
+            )
+            .toList(),
     };
   }
 

@@ -105,7 +105,7 @@ class VendaRemoteDatasourceImpl implements VendaRemoteDatasource {
   Exception _buildException(DioException e) {
     if (e.response?.statusCode == 401) {
       return const ServerException(
-        message: 'Sessao expirada. Faca login novamente.',
+        message: 'Sessão expirada. Faça login novamente.',
         statusCode: 401,
       );
     }

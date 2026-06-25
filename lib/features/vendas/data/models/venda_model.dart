@@ -14,11 +14,11 @@ class VendaItemModel extends VendaItem {
     final preco = _toDouble(
       json['preco_unitario_real'] ?? json['precoUnitarioReal'],
     );
+    final receita = json['receita'];
 
     return VendaItemModel(
       receitaId: _toInt(json['receita_id'] ?? json['receitaId']),
-      produto: (json['produto'] ?? json['nome'] ?? json['receita'] ?? '')
-          .toString(),
+      produto: _toProdutoNome(json['produto'] ?? json['nome'] ?? receita),
       quantidade: quantidade,
       precoUnitarioReal: preco,
       total: _toDouble(json['total'] ?? json['valor_total']) == 0
@@ -113,6 +113,14 @@ List<VendaItem> _parseItens(dynamic value) {
       .whereType<Map>()
       .map((json) => VendaItemModel.fromJson(Map<String, dynamic>.from(json)))
       .toList();
+}
+
+String _toProdutoNome(dynamic value) {
+  if (value is Map) {
+    return (value['nome'] ?? value['produto'] ?? value['descricao'] ?? '')
+        .toString();
+  }
+  return (value ?? '').toString();
 }
 
 int _toInt(dynamic value) {

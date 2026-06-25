@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class LoginPage extends StatefulWidget {
   final Future<void> Function(String email, String senha) onLogin;
 
-  const LoginPage({
-    super.key,
-    required this.onLogin,
-  });
+  const LoginPage({super.key, required this.onLogin});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -31,10 +28,7 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _loading = true);
     try {
-      await widget.onLogin(
-        _emailCtrl.text.trim(),
-        _senhaCtrl.text,
-      );
+      await widget.onLogin(_emailCtrl.text.trim(), _senhaCtrl.text);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -53,9 +47,9 @@ class _LoginPageState extends State<LoginPage> {
   String _messageFromError(Object error) {
     final message = error.toString();
     if (message.contains('401') || message.contains('Credenciais')) {
-      return 'E-mail ou senha invÃ¡lidos';
+      return 'E-mail ou senha inválidos';
     }
-    return 'NÃ£o foi possÃ­vel entrar. Verifique o servidor e tente novamente.';
+    return 'Não foi possível entrar. Verifique o servidor e tente novamente.';
   }
 
   @override
@@ -118,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
                               final email = value?.trim() ?? '';
                               if (email.isEmpty) return 'Informe seu e-mail';
                               if (!email.contains('@')) {
-                                return 'Informe um e-mail vÃ¡lido';
+                                return 'Informe um e-mail válido';
                               }
                               return null;
                             },

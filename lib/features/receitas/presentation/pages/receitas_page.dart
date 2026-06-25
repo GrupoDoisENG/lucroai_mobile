@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/auth/auth_session.dart';
 import '../../../insumos/domain/entities/insumo.dart';
+import '../../../insumos/presentation/cubit/insumos_cubit.dart';
+import '../../../insumos/presentation/cubit/insumos_state.dart';
 import '../../domain/entities/receita.dart';
 import '../cubit/receitas_cubit.dart';
 import '../cubit/receitas_state.dart';
@@ -27,6 +30,11 @@ class _ReceitasPageState extends State<ReceitasPage> {
       if (cubit.state.status == ReceitasStatus.initial) {
         cubit.loadReceitas();
       }
+
+      final insumosCubit = context.read<InsumosCubit>();
+      if (insumosCubit.state.status == InsumosStatus.initial) {
+        insumosCubit.loadInsumos();
+      }
     });
   }
 
@@ -37,9 +45,6 @@ class _ReceitasPageState extends State<ReceitasPage> {
   }
 
   Future<void> _openFormDialog({Receita? receita}) async {
-    final empresaIdController = TextEditingController(
-      text: (receita?.empresaId ?? 1).toString(),
-    );
     final nomeController = TextEditingController(text: receita?.nome ?? '');
     final rendimentoController = TextEditingController(
       text: receita?.rendimento.toString() ?? '',
@@ -59,283 +64,364 @@ class _ReceitasPageState extends State<ReceitasPage> {
 
     InsumoUnidadeMedida unidadeRendimento =
         receita?.unidadeRendimento ?? InsumoUnidadeMedida.unidades;
+    final ingredientes =
+        receita?.itens
+            .map(
+              (item) => _ReceitaItemDraft(
+                insumoId: item.insumoId,
+                quantidade: item.quantidade,
+              ),
+            )
+            .toList() ??
+        <_ReceitaItemDraft>[];
     final formKey = GlobalKey<FormState>();
+    final receitasCubit = context.read<ReceitasCubit>();
+    final insumosCubit = context.read<InsumosCubit>();
+
+    void atualizarCustos(List<Insumo> insumos) {
+      final custoProducao = ingredientes.fold<double>(0, (sum, item) {
+        final insumo = _findInsumo(insumos, item.insumoId);
+        return sum + item.custoCalculado(insumo);
+      });
+      final rendimento = _parseDouble(rendimentoController.text) ?? 0;
+      final margemPercentual = _parseDouble(margemLucroController.text) ?? 0;
+      final custoUnitario = rendimento > 0 ? custoProducao / rendimento : 0.0;
+      final precoSugerido = custoUnitario * (1 + (margemPercentual / 100));
+
+      custoProducaoController.text = _formatDecimal(custoProducao);
+      custoUnitarioController.text = _formatDecimal(custoUnitario);
+      precoSugeridoController.text = _formatDecimal(precoSugerido);
+    }
 
     await showDialog<void>(
       context: context,
       barrierColor: Colors.black87,
       builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Dialog(
-              backgroundColor: const Color(0xFF111111),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          receita == null ? 'Nova receita' : 'Editar receita',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: receitasCubit),
+            BlocProvider.value(value: insumosCubit),
+          ],
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              final insumosState = context.watch<InsumosCubit>().state;
+              final insumos = insumosState.insumos;
+              atualizarCustos(insumos);
+
+              return Dialog(
+                backgroundColor: const Color(0xFF111111),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: SingleChildScrollView(
+                    child: Form(
+                      key: formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            receita == null ? 'Nova receita' : 'Editar receita',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        if (receita == null) ...[
+                          const SizedBox(height: 16),
                           _buildInput(
-                            controller: empresaIdController,
-                            label: 'Empresa ID',
-                            keyboardType: TextInputType.number,
+                            controller: nomeController,
+                            label: 'Nome',
                             validator: (value) {
-                              final empresaId = int.tryParse(value ?? '');
-                              if (empresaId == null || empresaId <= 0) {
-                                return 'Informe o ID da empresa';
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Informe o nome';
                               }
                               return null;
                             },
                           ),
                           const SizedBox(height: 12),
-                        ],
-                        _buildInput(
-                          controller: nomeController,
-                          label: 'Nome',
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Informe o nome';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildInput(
-                                controller: rendimentoController,
-                                label: 'Rendimento',
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                validator: (value) => _validatePositiveNumber(
-                                  value,
-                                  'Obrigatorio',
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _buildDropdown<InsumoUnidadeMedida>(
-                                label: 'Unidade',
-                                value: unidadeRendimento,
-                                items: InsumoUnidadeMedida.values,
-                                itemLabel: (item) => item.label,
-                                onChanged: (value) {
-                                  if (value != null) {
-                                    setModalState(() {
-                                      unidadeRendimento = value;
-                                    });
-                                  }
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildInput(
-                                controller: custoProducaoController,
-                                label: 'Custo producao',
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                validator: (value) =>
-                                    _validateNonNegativeNumber(
-                                      value,
-                                      'Obrigatorio',
-                                    ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _buildInput(
-                                controller: custoUnitarioController,
-                                label: 'Custo unitario',
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                validator: (value) =>
-                                    _validateNonNegativeNumber(
-                                      value,
-                                      'Obrigatorio',
-                                    ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildInput(
-                                controller: margemLucroController,
-                                label: 'Margem lucro (%)',
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                validator: (value) =>
-                                    _validateNonNegativeNumber(
-                                      value,
-                                      'Obrigatorio',
-                                    ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _buildInput(
-                                controller: precoSugeridoController,
-                                label: 'Preco sugerido',
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                validator: (value) =>
-                                    _validateNonNegativeNumber(
-                                      value,
-                                      'Obrigatorio',
-                                    ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 18),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () =>
-                                    Navigator.of(dialogContext).pop(),
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(
-                                    color: Color(0xFF2B2B2B),
-                                  ),
-                                  foregroundColor: Colors.white70,
-                                  minimumSize: const Size.fromHeight(46),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: const Text('Cancelar'),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  if (!formKey.currentState!.validate()) {
-                                    return;
-                                  }
-
-                                  final navigator = Navigator.of(dialogContext);
-                                  final cubit = context.read<ReceitasCubit>();
-                                  final nome = nomeController.text.trim();
-                                  final rendimento =
-                                      _parseDouble(rendimentoController.text) ??
-                                      0;
-                                  final custoProducao =
-                                      _parseDouble(
-                                        custoProducaoController.text,
-                                      ) ??
-                                      0;
-                                  final custoUnitario =
-                                      _parseDouble(
-                                        custoUnitarioController.text,
-                                      ) ??
-                                      0;
-                                  final margemLucro =
-                                      (_parseDouble(
-                                            margemLucroController.text,
-                                          ) ??
-                                          0) /
-                                      100;
-                                  final precoSugerido =
-                                      _parseDouble(
-                                        precoSugeridoController.text,
-                                      ) ??
-                                      0;
-
-                                  if (receita == null) {
-                                    await cubit.createReceita(
-                                      empresaId: int.parse(
-                                        empresaIdController.text.trim(),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildInput(
+                                  controller: rendimentoController,
+                                  label: 'Rendimento',
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
                                       ),
-                                      nome: nome,
-                                      rendimento: rendimento,
-                                      unidadeRendimento: unidadeRendimento,
-                                      custoProducao: custoProducao,
-                                      custoUnitario: custoUnitario,
-                                      margemLucro: margemLucro,
-                                      precoSugerido: precoSugerido,
-                                    );
-                                  } else {
-                                    await cubit.updateReceita(
-                                      id: receita.id,
-                                      nome: nome,
-                                      rendimento: rendimento,
-                                      unidadeRendimento: unidadeRendimento,
-                                      custoProducao: custoProducao,
-                                      custoUnitario: custoUnitario,
-                                      margemLucro: margemLucro,
-                                      precoSugerido: precoSugerido,
-                                    );
-                                  }
-
-                                  if (dialogContext.mounted) {
-                                    navigator.pop();
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFF6B3D),
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size.fromHeight(46),
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                  onChanged: (_) {
+                                    setModalState(() {
+                                      atualizarCustos(insumos);
+                                    });
+                                  },
+                                  validator: (value) => _validatePositiveNumber(
+                                    value,
+                                    'Obrigatorio',
                                   ),
                                 ),
-                                child: Text(
-                                  receita == null ? 'Salvar' : 'Atualizar',
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _buildDropdown<InsumoUnidadeMedida>(
+                                  label: 'Unidade',
+                                  value: unidadeRendimento,
+                                  items: InsumoUnidadeMedida.values,
+                                  itemLabel: (item) => item.label,
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      setModalState(() {
+                                        unidadeRendimento = value;
+                                      });
+                                    }
+                                  },
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          _buildIngredientesSection(
+                            insumos: insumos,
+                            ingredientes: ingredientes,
+                            onChanged: () {
+                              setModalState(() {
+                                atualizarCustos(insumos);
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildInput(
+                                  controller: custoProducaoController,
+                                  label: 'Custo producao',
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  readOnly: true,
+                                  validator: (value) =>
+                                      _validateNonNegativeNumber(
+                                        value,
+                                        'Obrigatorio',
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _buildInput(
+                                  controller: custoUnitarioController,
+                                  label: 'Custo unitario',
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  readOnly: true,
+                                  validator: (value) =>
+                                      _validateNonNegativeNumber(
+                                        value,
+                                        'Obrigatorio',
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildInput(
+                                  controller: margemLucroController,
+                                  label: 'Margem lucro (%)',
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  onChanged: (_) {
+                                    setModalState(() {
+                                      atualizarCustos(insumos);
+                                    });
+                                  },
+                                  validator: (value) =>
+                                      _validateNonNegativeNumber(
+                                        value,
+                                        'Obrigatorio',
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _buildInput(
+                                  controller: precoSugeridoController,
+                                  label: 'Preco sugerido',
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  readOnly: true,
+                                  validator: (value) =>
+                                      _validateNonNegativeNumber(
+                                        value,
+                                        'Obrigatorio',
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () =>
+                                      Navigator.of(dialogContext).pop(),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(
+                                      color: Color(0xFF2B2B2B),
+                                    ),
+                                    foregroundColor: Colors.white70,
+                                    minimumSize: const Size.fromHeight(46),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text('Cancelar'),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    if (!formKey.currentState!.validate()) {
+                                      return;
+                                    }
+
+                                    if (ingredientes.isEmpty) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          backgroundColor: Color(0xFF1B1B1B),
+                                          content: Text(
+                                            'Adicione pelo menos um ingrediente.',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    final navigator = Navigator.of(
+                                      dialogContext,
+                                    );
+                                    final cubit = context.read<ReceitasCubit>();
+                                    final nome = nomeController.text.trim();
+                                    final rendimento =
+                                        _parseDouble(
+                                          rendimentoController.text,
+                                        ) ??
+                                        0;
+                                    final custoProducao =
+                                        _parseDouble(
+                                          custoProducaoController.text,
+                                        ) ??
+                                        0;
+                                    final custoUnitario =
+                                        _parseDouble(
+                                          custoUnitarioController.text,
+                                        ) ??
+                                        0;
+                                    final margemLucro =
+                                        (_parseDouble(
+                                              margemLucroController.text,
+                                            ) ??
+                                            0) /
+                                        100;
+                                    final precoSugerido =
+                                        _parseDouble(
+                                          precoSugeridoController.text,
+                                        ) ??
+                                        0;
+                                    final itens = ingredientes.map((item) {
+                                      final insumo = _findInsumo(
+                                        insumos,
+                                        item.insumoId,
+                                      );
+                                      return ReceitaItem(
+                                        insumoId: item.insumoId,
+                                        quantidade: item.quantidade,
+                                        custoCalculado: item.custoCalculado(
+                                          insumo,
+                                        ),
+                                      );
+                                    }).toList();
+
+                                    if (receita == null) {
+                                      await cubit.createReceita(
+                                        empresaId:
+                                            AuthSession.empresaId ??
+                                            receita?.empresaId ??
+                                            1,
+                                        nome: nome,
+                                        rendimento: rendimento,
+                                        unidadeRendimento: unidadeRendimento,
+                                        custoProducao: custoProducao,
+                                        custoUnitario: custoUnitario,
+                                        margemLucro: margemLucro,
+                                        precoSugerido: precoSugerido,
+                                        itens: itens,
+                                      );
+                                    } else {
+                                      await cubit.updateReceita(
+                                        id: receita.id,
+                                        nome: nome,
+                                        rendimento: rendimento,
+                                        unidadeRendimento: unidadeRendimento,
+                                        custoProducao: custoProducao,
+                                        custoUnitario: custoUnitario,
+                                        margemLucro: margemLucro,
+                                        precoSugerido: precoSugerido,
+                                        itens: itens,
+                                      );
+                                    }
+
+                                    if (dialogContext.mounted) {
+                                      navigator.pop();
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFFF6B3D),
+                                    foregroundColor: Colors.white,
+                                    minimumSize: const Size.fromHeight(46),
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    receita == null ? 'Salvar' : 'Atualizar',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         );
       },
     );
 
-    empresaIdController.dispose();
     nomeController.dispose();
     rendimentoController.dispose();
     custoProducaoController.dispose();
@@ -484,11 +570,15 @@ class _ReceitasPageState extends State<ReceitasPage> {
     required TextEditingController controller,
     required String label,
     TextInputType? keyboardType,
+    bool readOnly = false,
+    ValueChanged<String>? onChanged,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      readOnly: readOnly,
+      onChanged: onChanged,
       validator: validator,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
@@ -512,6 +602,173 @@ class _ReceitasPageState extends State<ReceitasPage> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFFF6B3D)),
         ),
+      ),
+    );
+  }
+
+  Widget _buildIngredientesSection({
+    required List<Insumo> insumos,
+    required List<_ReceitaItemDraft> ingredientes,
+    required VoidCallback onChanged,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF171717),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF272727)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Ingredientes',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: insumos.isEmpty
+                    ? null
+                    : () {
+                        ingredientes.add(
+                          _ReceitaItemDraft(
+                            insumoId: insumos.first.id,
+                            quantidade: 1,
+                          ),
+                        );
+                        onChanged();
+                      },
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Adicionar'),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFFFF6B3D),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ],
+          ),
+          if (insumos.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                'Cadastre insumos antes de montar a receita.',
+                style: TextStyle(color: Color(0xFF858585), fontSize: 12),
+              ),
+            )
+          else if (ingredientes.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                'Adicione os insumos usados nesta receita.',
+                style: TextStyle(color: Color(0xFF858585), fontSize: 12),
+              ),
+            )
+          else
+            ...ingredientes.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              final selected =
+                  _findInsumo(insumos, item.insumoId) ?? insumos.first;
+              return Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: DropdownButtonFormField<int>(
+                        initialValue: selected.id,
+                        dropdownColor: const Color(0xFF171717),
+                        style: const TextStyle(color: Colors.white),
+                        iconEnabledColor: const Color(0xFFFF6B3D),
+                        decoration: _inputDecoration('Insumo'),
+                        items: insumos
+                            .map(
+                              (insumo) => DropdownMenuItem<int>(
+                                value: insumo.id,
+                                child: Text(
+                                  insumo.nome,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          item.insumoId = value;
+                          onChanged();
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 3,
+                      child: TextFormField(
+                        key: ValueKey('ingrediente-${index}-${item.insumoId}'),
+                        initialValue: _formatDecimal(item.quantidade),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        style: const TextStyle(color: Colors.white),
+                        decoration: _inputDecoration('Qtd'),
+                        onChanged: (value) {
+                          item.quantidade = _parseDouble(value) ?? 0;
+                          onChanged();
+                        },
+                        validator: (value) {
+                          final quantidade = _parseDouble(value ?? '');
+                          if (quantidade == null || quantidade <= 0) {
+                            return 'Obrigatorio';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Remover ingrediente',
+                      onPressed: () {
+                        ingredientes.removeAt(index);
+                        onChanged();
+                      },
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Color(0xFF858585),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Color(0xFF8A8A8A)),
+      filled: true,
+      fillColor: const Color(0xFF171717),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF272727)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF272727)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFFF6B3D)),
       ),
     );
   }
@@ -578,5 +835,28 @@ class _ReceitasPageState extends State<ReceitasPage> {
       return null;
     }
     return double.tryParse(normalized);
+  }
+
+  static Insumo? _findInsumo(List<Insumo> insumos, int id) {
+    for (final insumo in insumos) {
+      if (insumo.id == id) return insumo;
+    }
+    return null;
+  }
+
+  static String _formatDecimal(double value) {
+    final fixed = value.toStringAsFixed(2);
+    return fixed.endsWith('.00') ? value.toStringAsFixed(0) : fixed;
+  }
+}
+
+class _ReceitaItemDraft {
+  int insumoId;
+  double quantidade;
+
+  _ReceitaItemDraft({required this.insumoId, required this.quantidade});
+
+  double custoCalculado(Insumo? insumo) {
+    return quantidade * (insumo?.custoUnitario ?? 0);
   }
 }

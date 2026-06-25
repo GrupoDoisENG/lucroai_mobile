@@ -34,6 +34,23 @@ class Venda {
     required this.dataVenda,
     this.itens = const [],
   });
+
+  bool get isCancelada {
+    final normalized = status
+        .trim()
+        .toLowerCase()
+        .replaceAll('í', 'i')
+        .replaceAll('ú', 'u')
+        .replaceAll('ã', 'a')
+        .replaceAll('ç', 'c');
+
+    return normalized == 'cancelada' ||
+        normalized == 'cancelado' ||
+        normalized == 'canceled' ||
+        normalized == 'cancelled';
+  }
+
+  bool get isFaturavel => !isCancelada;
 }
 
 class CreateVendaItem {
@@ -67,15 +84,20 @@ class VendaResumo {
   });
 
   factory VendaResumo.fromVendas(List<Venda> vendas) {
-    final totalVendido = vendas.fold<double>(
+    final vendasFaturaveis = vendas
+        .where((venda) => venda.isFaturavel)
+        .toList();
+    final totalVendido = vendasFaturaveis.fold<double>(
       0,
       (total, venda) => total + venda.total,
     );
 
     return VendaResumo(
       totalVendido: totalVendido,
-      quantidadeVendas: vendas.length,
-      ticketMedio: vendas.isEmpty ? 0 : totalVendido / vendas.length,
+      quantidadeVendas: vendasFaturaveis.length,
+      ticketMedio: vendasFaturaveis.isEmpty
+          ? 0
+          : totalVendido / vendasFaturaveis.length,
     );
   }
 }

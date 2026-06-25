@@ -16,6 +16,7 @@ class UpdateReceitaUsecase {
     double? custoUnitario,
     double? margemLucro,
     double? precoSugerido,
+    List<ReceitaItem>? itens,
   }) {
     return repository.updateReceita(
       id: id,
@@ -26,6 +27,7 @@ class UpdateReceitaUsecase {
       custoUnitario: custoUnitario,
       margemLucro: margemLucro,
       precoSugerido: precoSugerido,
+      itens: itens,
     );
   }
 }

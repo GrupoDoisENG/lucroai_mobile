@@ -4,8 +4,9 @@ import '../../domain/entities/venda.dart';
 
 class VendaCard extends StatelessWidget {
   final Venda venda;
+  final String? produtoNome;
 
-  const VendaCard({super.key, required this.venda});
+  const VendaCard({super.key, required this.venda, this.produtoNome});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +40,7 @@ class VendaCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  venda.produto,
+                  _displayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -85,6 +86,22 @@ class VendaCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String get _displayName {
+    if (produtoNome != null && produtoNome!.trim().isNotEmpty) {
+      return produtoNome!.trim();
+    }
+
+    if (venda.produto.trim().isNotEmpty && venda.produto != 'Venda') {
+      return venda.produto;
+    }
+
+    if (venda.itens.isNotEmpty && venda.itens.first.produto.trim().isNotEmpty) {
+      return venda.itens.first.produto;
+    }
+
+    return 'Produto vendido';
   }
 
   static String _formatCurrency(double value) {
