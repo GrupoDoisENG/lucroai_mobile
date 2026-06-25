@@ -17,6 +17,9 @@ class InsumosPage extends StatefulWidget {
 
 class _InsumosPageState extends State<InsumosPage> {
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _nomeController = TextEditingController();
+  final TextEditingController _quantidadeController = TextEditingController();
+  final TextEditingController _valorPagoController = TextEditingController();
 
   @override
   void initState() {
@@ -33,18 +36,20 @@ class _InsumosPageState extends State<InsumosPage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _nomeController.dispose();
+    _quantidadeController.dispose();
+    _valorPagoController.dispose();
     super.dispose();
   }
 
   Future<void> _openFormDialog({Insumo? insumo}) async {
     final cubit = context.read<InsumosCubit>();
-    final nomeController = TextEditingController(text: insumo?.nome ?? '');
-    final quantidadeController = TextEditingController(
-      text: insumo?.quantidade.toString() ?? '',
-    );
-    final valorPagoController = TextEditingController(
-      text: insumo?.valorPago.toString() ?? '',
-    );
+    _nomeController.text = insumo?.nome ?? '';
+    _quantidadeController.text = insumo?.quantidade.toString() ?? '';
+    _valorPagoController.text = insumo?.valorPago.toString() ?? '';
+    final nomeController = _nomeController;
+    final quantidadeController = _quantidadeController;
+    final valorPagoController = _valorPagoController;
 
     InsumoUnidadeMedida unidade = insumo?.unidade ?? InsumoUnidadeMedida.gramas;
     final formKey = GlobalKey<FormState>();
@@ -300,9 +305,6 @@ class _InsumosPageState extends State<InsumosPage> {
       },
     );
 
-    nomeController.dispose();
-    quantidadeController.dispose();
-    valorPagoController.dispose();
   }
 
   Future<void> _confirmDelete(Insumo insumo) async {
