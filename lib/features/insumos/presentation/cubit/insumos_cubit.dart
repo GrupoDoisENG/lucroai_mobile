@@ -66,7 +66,6 @@ class InsumosCubit extends Cubit<InsumosState> {
   }
 
   Future<bool> createInsumo({
-    required int empresaId,
     required String nome,
     required double quantidade,
     required InsumoUnidadeMedida unidade,
@@ -76,7 +75,6 @@ class InsumosCubit extends Cubit<InsumosState> {
 
     try {
       await createInsumoUsecase(
-        empresaId: empresaId,
         nome: nome,
         quantidade: quantidade,
         unidade: unidade,

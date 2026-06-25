@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/auth/auth_session.dart';
 import '../../domain/entities/insumo.dart';
 import '../../domain/services/insumo_custo_calculator.dart';
 import '../cubit/insumos_cubit.dart';
@@ -38,6 +37,7 @@ class _InsumosPageState extends State<InsumosPage> {
   }
 
   Future<void> _openFormDialog({Insumo? insumo}) async {
+    final cubit = context.read<InsumosCubit>();
     final nomeController = TextEditingController(text: insumo?.nome ?? '');
     final quantidadeController = TextEditingController(
       text: insumo?.quantidade.toString() ?? '',
@@ -55,7 +55,7 @@ class _InsumosPageState extends State<InsumosPage> {
       barrierColor: Colors.black87,
       builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (ctx, setModalState) {
             final quantidade = _parseDouble(quantidadeController.text) ?? 0;
             final valorPago = _parseDouble(valorPagoController.text) ?? 0;
             final custoUnitario = InsumoCustoCalculator.calcularCustoUnitario(
@@ -206,8 +206,6 @@ class _InsumosPageState extends State<InsumosPage> {
                                         final navigator = Navigator.of(
                                           dialogContext,
                                         );
-                                        final cubit = context
-                                            .read<InsumosCubit>();
                                         final messenger = ScaffoldMessenger.of(
                                           context,
                                         );
@@ -226,10 +224,6 @@ class _InsumosPageState extends State<InsumosPage> {
 
                                         if (insumo == null) {
                                           success = await cubit.createInsumo(
-                                            empresaId:
-                                                AuthSession.empresaId ??
-                                                insumo?.empresaId ??
-                                                1,
                                             nome: nome,
                                             quantidade: quantidade,
                                             unidade: unidade,

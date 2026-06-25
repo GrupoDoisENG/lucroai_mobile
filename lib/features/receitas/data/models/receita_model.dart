@@ -5,29 +5,21 @@ class ReceitaItemModel extends ReceitaItem {
   const ReceitaItemModel({
     required super.insumoId,
     required super.quantidade,
-    required super.custoCalculado,
+    super.custoCalculado,
   });
 
   factory ReceitaItemModel.fromJson(Map<String, dynamic> json) {
     return ReceitaItemModel(
       insumoId: _toInt(json['insumoId'] ?? json['insumo_id']),
       quantidade: _toDouble(json['quantidade']),
-      custoCalculado: _toDouble(
+      custoCalculado: _toDoubleOrNull(
         json['custoCalculado'] ?? json['custo_calculado'],
       ),
     );
   }
 
-  static Map<String, dynamic> toJsonCreate({
-    required int insumoId,
-    required double quantidade,
-    required double custoCalculado,
-  }) {
-    return {
-      'insumoId': insumoId,
-      'quantidade': quantidade,
-      'custoCalculado': custoCalculado,
-    };
+  Map<String, dynamic> toJsonCreate() {
+    return {'insumo_id': insumoId, 'quantidade': quantidade};
   }
 }
 
@@ -38,10 +30,11 @@ class ReceitaModel extends Receita {
     required super.nome,
     required super.rendimento,
     required super.unidadeRendimento,
-    required super.custoProducao,
-    required super.custoUnitario,
-    required super.margemLucro,
-    required super.precoSugerido,
+    required super.dataCriacao,
+    super.custoProducao,
+    super.custoUnitario,
+    super.margemLucro,
+    super.precoSugerido,
     super.itens,
   });
 
@@ -55,43 +48,38 @@ class ReceitaModel extends Receita {
         (json['unidadeRendimento'] ?? json['unidade_rendimento'] ?? 'UN')
             .toString(),
       ),
-      custoProducao: _toDouble(json['custoProducao'] ?? json['custo_producao']),
-      custoUnitario: _toDouble(json['custoUnitario'] ?? json['custo_unitario']),
-      margemLucro: _toDouble(json['margemLucro'] ?? json['margem_lucro']),
-      precoSugerido: _toDouble(json['precoSugerido'] ?? json['preco_sugerido']),
+      custoProducao: _toDoubleOrNull(
+        json['custoProducao'] ?? json['custo_producao'],
+      ),
+      custoUnitario: _toDoubleOrNull(
+        json['custoUnitario'] ?? json['custo_unitario'],
+      ),
+      margemLucro: _toDoubleOrNull(json['margemLucro'] ?? json['margem_lucro']),
+      precoSugerido: _toDoubleOrNull(
+        json['precoSugerido'] ?? json['preco_sugerido'],
+      ),
+      dataCriacao:
+          DateTime.tryParse(
+            (json['dataCriacao'] ?? json['data_criacao'] ?? '').toString(),
+          ) ??
+          DateTime.now(),
       itens: _parseItens(json['itens']),
     );
   }
 
   static Map<String, dynamic> toJsonCreate({
-    required int empresaId,
     required String nome,
     required double rendimento,
     required InsumoUnidadeMedida unidadeRendimento,
-    required double custoProducao,
-    required double custoUnitario,
-    required double margemLucro,
-    required double precoSugerido,
-    List<ReceitaItem> itens = const [],
+    double? margemLucro,
+    List<ReceitaItemModel> insumos = const [],
   }) {
     return {
-      'empresaId': empresaId,
       'nome': nome,
       'rendimento': rendimento,
       'unidadeRendimento': unidadeRendimento.value,
-      'custoProducao': custoProducao,
-      'custoUnitario': custoUnitario,
-      'margemLucro': margemLucro,
-      'precoSugerido': precoSugerido,
-      'itens': itens
-          .map(
-            (item) => ReceitaItemModel.toJsonCreate(
-              insumoId: item.insumoId,
-              quantidade: item.quantidade,
-              custoCalculado: item.custoCalculado,
-            ),
-          )
-          .toList(),
+      if (margemLucro != null) 'margem_lucro': margemLucro,
+      'insumos': insumos.map((i) => i.toJsonCreate()).toList(),
     };
   }
 
@@ -99,31 +87,17 @@ class ReceitaModel extends Receita {
     String? nome,
     double? rendimento,
     InsumoUnidadeMedida? unidadeRendimento,
-    double? custoProducao,
-    double? custoUnitario,
     double? margemLucro,
-    double? precoSugerido,
-    List<ReceitaItem>? itens,
+    List<ReceitaItemModel>? insumos,
   }) {
     return {
       if (nome != null) 'nome': nome,
       if (rendimento != null) 'rendimento': rendimento,
       if (unidadeRendimento != null)
         'unidadeRendimento': unidadeRendimento.value,
-      if (custoProducao != null) 'custoProducao': custoProducao,
-      if (custoUnitario != null) 'custoUnitario': custoUnitario,
-      if (margemLucro != null) 'margemLucro': margemLucro,
-      if (precoSugerido != null) 'precoSugerido': precoSugerido,
-      if (itens != null)
-        'itens': itens
-            .map(
-              (item) => ReceitaItemModel.toJsonCreate(
-                insumoId: item.insumoId,
-                quantidade: item.quantidade,
-                custoCalculado: item.custoCalculado,
-              ),
-            )
-            .toList(),
+      if (margemLucro != null) 'margem_lucro': margemLucro,
+      if (insumos != null)
+        'insumos': insumos.map((i) => i.toJsonCreate()).toList(),
     };
   }
 
@@ -147,4 +121,10 @@ int _toInt(dynamic value) {
 double _toDouble(dynamic value) {
   if (value is num) return value.toDouble();
   return double.tryParse(value?.toString().replaceAll(',', '.') ?? '') ?? 0;
+}
+
+double? _toDoubleOrNull(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString().replaceAll(',', '.'));
 }

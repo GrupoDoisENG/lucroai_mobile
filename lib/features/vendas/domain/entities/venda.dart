@@ -4,6 +4,8 @@ class VendaItem {
   final double quantidade;
   final double precoUnitarioReal;
   final double total;
+  final double? custoUnitario;
+  final double? margemRealizada;
 
   const VendaItem({
     required this.receitaId,
@@ -11,6 +13,8 @@ class VendaItem {
     required this.quantidade,
     required this.precoUnitarioReal,
     required this.total,
+    this.custoUnitario,
+    this.margemRealizada,
   });
 }
 
@@ -66,10 +70,9 @@ class CreateVendaItem {
 }
 
 class CreateVendaRequest {
-  final int empresaId;
   final List<CreateVendaItem> itens;
 
-  const CreateVendaRequest({required this.empresaId, required this.itens});
+  const CreateVendaRequest({required this.itens});
 }
 
 class VendaResumo {

@@ -6,12 +6,14 @@ class ReceitaCard extends StatelessWidget {
   final Receita receita;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final VoidCallback onSimular;
 
   const ReceitaCard({
     super.key,
     required this.receita,
     required this.onTap,
     required this.onDelete,
+    required this.onSimular,
   });
 
   @override
@@ -65,7 +67,7 @@ class ReceitaCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${_formatNumber(receita.rendimento)} ${receita.unidadeRendimento.label} - custo ${_formatCurrency(receita.custoProducao)}',
+                          '${_formatNumber(receita.rendimento)} ${receita.unidadeRendimento.label} - custo ${receita.custoProducao != null ? _formatCurrency(receita.custoProducao!) : '–'}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -82,7 +84,9 @@ class ReceitaCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      _formatCurrency(receita.precoSugerido),
+                      receita.precoSugerido != null
+                          ? _formatCurrency(receita.precoSugerido!)
+                          : '–',
                       style: const TextStyle(
                         color: Color(0xFFFF6B3D),
                         fontSize: 12,
@@ -91,13 +95,28 @@ class ReceitaCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${_formatNumber(receita.margemLucro * 100, decimals: 1)}%',
+                      receita.margemLucro != null
+                          ? '${_formatNumber(receita.margemLucro! * 100, decimals: 1)}%'
+                          : '–',
                       style: const TextStyle(
                         color: Color(0xFF858585),
                         fontSize: 10.5,
                       ),
                     ),
                     const SizedBox(height: 12),
+                    InkWell(
+                      onTap: onSimular,
+                      borderRadius: BorderRadius.circular(20),
+                      child: const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.science_outlined,
+                          size: 17,
+                          color: Color(0xFF7F7F7F),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                     InkWell(
                       onTap: onDelete,
                       borderRadius: BorderRadius.circular(20),

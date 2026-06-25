@@ -8,4 +8,6 @@ abstract class VendaRepository {
     DateTime? dataInicio,
     DateTime? dataFim,
   });
+
+  Future<Venda> atualizarStatus(int id, String status);
 }

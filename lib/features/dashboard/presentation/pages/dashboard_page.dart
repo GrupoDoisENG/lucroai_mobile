@@ -373,13 +373,13 @@ class _DashboardData {
     if (venda.itens.isNotEmpty) {
       return venda.itens.fold<double>(0, (sum, item) {
         final receita = receitaById[item.receitaId];
-        final cost = (receita?.custoUnitario ?? 0) * item.quantidade;
+        final cost = (receita?.custoUnitario ?? 0.0) * item.quantidade;
         return sum + item.total - cost;
       });
     }
 
     final receita = receitaByName[venda.produto.trim().toLowerCase()];
-    final unitCost = receita?.custoUnitario ?? 0;
+    final unitCost = receita?.custoUnitario ?? 0.0;
     return venda.total - (unitCost * venda.quantidade);
   }
 
@@ -449,7 +449,7 @@ class _DashboardData {
       if (venda.itens.isEmpty) {
         final receita = receitaByName[venda.produto.trim().toLowerCase()];
         final profit =
-            venda.total - ((receita?.custoUnitario ?? 0) * venda.quantidade);
+            venda.total - ((receita?.custoUnitario ?? 0.0) * venda.quantidade);
         final revenue = venda.total;
         products.update(
           venda.produto,
@@ -470,7 +470,7 @@ class _DashboardData {
             ? item.produto
             : receita?.nome ?? 'Produto';
         final profit =
-            item.total - ((receita?.custoUnitario ?? 0) * item.quantidade);
+            item.total - ((receita?.custoUnitario ?? 0.0) * item.quantidade);
         products.update(
           name,
           (current) => current.add(item.quantidade, item.total, profit),
@@ -488,14 +488,16 @@ class _DashboardData {
       final fallbackProducts =
           receitas
               .map((receita) {
-                final profit = receita.precoSugerido - receita.custoUnitario;
+                final preco = receita.precoSugerido ?? 0.0;
+                final custo = receita.custoUnitario ?? 0.0;
+                final profit = preco - custo;
                 return _ProductProfit(
                   name: receita.nome,
                   quantity: receita.rendimento,
                   profit: profit,
-                  margin: receita.precoSugerido == 0
-                      ? receita.margemLucro * 100
-                      : (profit / receita.precoSugerido) * 100,
+                  margin: preco == 0
+                      ? (receita.margemLucro ?? 0.0) * 100
+                      : (profit / preco) * 100,
                   hasSales: false,
                 );
               })
@@ -872,41 +874,35 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 520;
-
-        return GridView.count(
-          crossAxisCount: isWide ? 4 : 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: isWide ? 2.3 : 2.5,
-          physics: const NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          children: [
-            _ActionButton(
-              label: 'Novo Insumo',
-              icon: Icons.add_box_outlined,
-              onTap: () => onNavigate?.call(1),
-            ),
-            _ActionButton(
-              label: 'Nova Receita',
-              icon: Icons.restaurant_menu_outlined,
-              onTap: () => onNavigate?.call(2),
-            ),
-            _ActionButton(
-              label: 'Produção',
-              icon: Icons.inventory_2_outlined,
-              onTap: () => onNavigate?.call(5),
-            ),
-            _ActionButton(
-              label: 'Simular',
-              icon: Icons.science_outlined,
-              onTap: () => onNavigate?.call(6),
-            ),
-          ],
-        );
-      },
+    return GridView.count(
+      crossAxisCount: 2,
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      childAspectRatio: 3.2,
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      children: [
+        _ActionButton(
+          label: 'Novo Insumo',
+          icon: Icons.add_box_outlined,
+          onTap: () => onNavigate?.call(1),
+        ),
+        _ActionButton(
+          label: 'Nova Receita',
+          icon: Icons.restaurant_menu_outlined,
+          onTap: () => onNavigate?.call(2),
+        ),
+        _ActionButton(
+          label: 'Producao',
+          icon: Icons.precision_manufacturing_outlined,
+          onTap: () => onNavigate?.call(6),
+        ),
+        _ActionButton(
+          label: 'Simular',
+          icon: Icons.science_outlined,
+          onTap: () => onNavigate?.call(7),
+        ),
+      ],
     );
   }
 }

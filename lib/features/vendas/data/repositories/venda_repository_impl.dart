@@ -27,4 +27,9 @@ class VendaRepositoryImpl implements VendaRepository {
       dataFim: dataFim,
     );
   }
+
+  @override
+  Future<Venda> atualizarStatus(int id, String status) {
+    return datasource.atualizarStatus(id, status);
+  }
 }

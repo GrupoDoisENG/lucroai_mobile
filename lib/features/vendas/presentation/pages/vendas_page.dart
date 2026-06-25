@@ -23,11 +23,13 @@ class _VendasPageState extends State<VendasPage> {
   final _precoController = TextEditingController();
   Receita? _receitaSelecionada;
 
+  final List<ItemCarrinho> _carrinho = [];
+
   @override
   void initState() {
     super.initState();
-    _quantidadeController.addListener(_refreshTotal);
-    _precoController.addListener(_refreshTotal);
+    _quantidadeController.addListener(_refresh);
+    _precoController.addListener(_refresh);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cubit = context.read<VendasCubit>();
@@ -39,20 +41,100 @@ class _VendasPageState extends State<VendasPage> {
 
   @override
   void dispose() {
-    _quantidadeController.removeListener(_refreshTotal);
-    _precoController.removeListener(_refreshTotal);
+    _quantidadeController.removeListener(_refresh);
+    _precoController.removeListener(_refresh);
     _quantidadeController.dispose();
     _precoController.dispose();
     super.dispose();
   }
 
-  void _refreshTotal() {
-    setState(() {});
-  }
+  void _refresh() => setState(() {});
 
   double get _quantidade => _parseDouble(_quantidadeController.text);
   double get _precoUnitario => _parseDouble(_precoController.text);
-  double get _total => _quantidade * _precoUnitario;
+
+  double get _totalCarrinho =>
+      _carrinho.fold(0, (sum, item) => sum + item.subtotal);
+
+  void _onReceitaChanged(Receita? receita) {
+    setState(() {
+      _receitaSelecionada = receita;
+      if (receita?.precoSugerido != null && receita!.precoSugerido! > 0) {
+        _precoController.text = receita.precoSugerido!
+            .toStringAsFixed(2)
+            .replaceAll('.', ',');
+      } else {
+        _precoController.clear();
+      }
+    });
+  }
+
+  void _adicionarAoCarrinho() {
+    if (!_formKey.currentState!.validate() || _receitaSelecionada == null) {
+      return;
+    }
+
+    setState(() {
+      _carrinho.add(
+        ItemCarrinho(
+          receita: _receitaSelecionada!,
+          quantidade: _quantidade,
+          precoUnitario: _precoUnitario,
+        ),
+      );
+      _formKey.currentState!.reset();
+      _quantidadeController.clear();
+      _precoController.clear();
+      _receitaSelecionada = null;
+    });
+  }
+
+  void _removerItem(int index) {
+    setState(() => _carrinho.removeAt(index));
+  }
+
+  Future<void> _registrarVenda(BuildContext context) async {
+    if (_carrinho.isEmpty) return;
+
+    final cubit = context.read<VendasCubit>();
+    final itensCopy = List<ItemCarrinho>.from(_carrinho);
+    final venda = await cubit.registrarVenda(itensCopy);
+
+    if (!mounted) return;
+
+    if (venda != null) {
+      setState(() => _carrinho.clear());
+      // ignore: use_build_context_synchronously
+      await _showConfirmacaoSheet(context, venda);
+    }
+  }
+
+  Future<void> _showConfirmacaoSheet(BuildContext context, Venda venda) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF101010),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _ConfirmacaoSheet(
+        venda: venda,
+        cubit: context.read<VendasCubit>(),
+        onFinalizado: (mensagem) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: const Color(0xFF1B1B1B),
+              content: Text(
+                mensagem,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +157,7 @@ class _VendasPageState extends State<VendasPage> {
                       ? SnackBarAction(
                           label: 'Produção',
                           textColor: const Color(0xFFFF6B3D),
-                          onPressed: () => widget.onNavigate?.call(5),
+                          onPressed: () => widget.onNavigate?.call(6),
                         )
                       : null,
                 ),
@@ -138,95 +220,233 @@ class _VendasPageState extends State<VendasPage> {
   }
 
   Widget _buildRegistro(BuildContext context, VendasState state) {
+    if (state.status == VendasStatus.loading && state.receitas.isEmpty) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFFF6B3D)),
+      );
+    }
+
     return ListView(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
       children: [
-        if (state.status == VendasStatus.loading && state.receitas.isEmpty) ...[
-          const SizedBox(height: 120),
-          const Center(
-            child: CircularProgressIndicator(color: Color(0xFFFF6B3D)),
-          ),
-        ] else ...[
-          Form(
-            key: _formKey,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF101010),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFF1A1A1A)),
+        _buildAddItemForm(state.receitas, state.isSubmitting),
+        if (_carrinho.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          _buildCarrinho(state.isSubmitting),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildAddItemForm(List<Receita> receitas, bool isSubmitting) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF101010),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF1A1A1A)),
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Adicionar produto',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildReceitaDropdown(state.receitas),
-                  const SizedBox(height: 12),
-                  _buildInput(
+            ),
+            const SizedBox(height: 12),
+            _buildReceitaDropdown(receitas),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildInput(
                     controller: _quantidadeController,
                     label: 'Quantidade',
-                    validator: (value) =>
-                        _validatePositiveNumber(value, 'Informe a quantidade'),
+                    validator: (v) =>
+                        _validatePositiveNumber(v, 'Informe a quantidade'),
                   ),
-                  const SizedBox(height: 12),
-                  _buildInput(
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _buildInput(
                     controller: _precoController,
                     label: 'Preço unitário real',
                     validator: (value) =>
                         _validatePositiveNumber(value, 'Informe o preço'),
                   ),
-                  const SizedBox(height: 14),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF171717),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFF272727)),
-                    ),
-                    child: Text(
-                      'Total: ${_formatCurrency(_total)}',
-                      style: const TextStyle(
-                        color: Color(0xFFFF6B3D),
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton.icon(
+                onPressed: isSubmitting ? null : _adicionarAoCarrinho,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFFF6B3D),
+                  side: const BorderSide(color: Color(0xFFFF6B3D)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Adicionar ao carrinho'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCarrinho(bool isSubmitting) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF101010),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF1A1A1A)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Carrinho',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                '${_carrinho.length} ${_carrinho.length == 1 ? 'item' : 'itens'}',
+                style: const TextStyle(
+                  color: Color(0xFF858585),
+                  fontSize: 11.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...List.generate(_carrinho.length, (i) {
+            final item = _carrinho[i];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.receita.nome,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${_formatQty(item.quantidade)} × ${_formatCurrency(item.precoUnitario)}',
+                          style: const TextStyle(
+                            color: Color(0xFF858585),
+                            fontSize: 11.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: state.isSubmitting
-                          ? null
-                          : () => _registrarVenda(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF6B3D),
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: const Color(0xFF4A2A21),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _formatCurrency(item.subtotal),
+                    style: const TextStyle(
+                      color: Color(0xFFFF6B3D),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: isSubmitting ? null : () => _removerItem(i),
+                    child: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.close,
+                        size: 16,
+                        color: Color(0xFF858585),
                       ),
-                      child: state.isSubmitting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Registrar Venda'),
                     ),
                   ),
                 ],
               ),
+            );
+          }),
+          const Divider(color: Color(0xFF1E1E1E), height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Total',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                _formatCurrency(_totalCarrinho),
+                style: const TextStyle(
+                  color: Color(0xFFFF6B3D),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: isSubmitting ? null : () => _registrarVenda(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF6B3D),
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: const Color(0xFF4A2A21),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Registrar Venda',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
             ),
           ),
         ],
-      ],
+      ),
     );
   }
 
@@ -344,11 +564,7 @@ class _VendasPageState extends State<VendasPage> {
       initialValue: receitas.contains(_receitaSelecionada)
           ? _receitaSelecionada
           : null,
-      onChanged: (value) {
-        setState(() {
-          _receitaSelecionada = value;
-        });
-      },
+      onChanged: _onReceitaChanged,
       validator: (value) {
         if (value == null) return 'Selecione um produto';
         return null;
@@ -404,43 +620,6 @@ class _VendasPageState extends State<VendasPage> {
     );
   }
 
-  Future<void> _registrarVenda(BuildContext context) async {
-    if (!_formKey.currentState!.validate() || _receitaSelecionada == null) {
-      return;
-    }
-
-    final cubit = context.read<VendasCubit>();
-    final messenger = ScaffoldMessenger.of(context);
-
-    final success = await cubit.registrarVenda(
-      empresaId: _receitaSelecionada!.empresaId,
-      receitaId: _receitaSelecionada!.id,
-      quantidade: _quantidade,
-      precoUnitarioReal: _precoUnitario,
-    );
-
-    if (!mounted) return;
-
-    if (success) {
-      _formKey.currentState!.reset();
-      _quantidadeController.clear();
-      _precoController.clear();
-      setState(() {
-        _receitaSelecionada = null;
-      });
-
-      messenger.showSnackBar(
-        const SnackBar(
-          backgroundColor: Color(0xFF1B1B1B),
-          content: Text(
-            'Venda registrada com sucesso.',
-            style: TextStyle(color: Colors.white),
-          ),
-        ),
-      );
-    }
-  }
-
   Future<void> _selectDate(
     BuildContext context, {
     required DateTime initialDate,
@@ -484,15 +663,19 @@ class _VendasPageState extends State<VendasPage> {
     return 'R\$ ${parts[0]},${parts[1]}';
   }
 
+  String _formatQty(double value) {
+    if (value % 1 == 0) return value.toStringAsFixed(0);
+    return value.toStringAsFixed(2).replaceAll('.', ',');
+  }
+
   String _friendlyError(String error) {
     if (error.contains('401') || error.toLowerCase().contains('unauthorized')) {
       return 'Sessão expirada. Faça login novamente.';
     }
 
     if (_isStockError(error)) {
-      return 'Estoque insuficiente para registrar a venda. Cadastre a produção do item em Estoque.';
+      return 'Estoque insuficiente para registrar a venda. Cadastre a produção do item em Produções.';
     }
-
     return error.replaceFirst('Exception: ', '');
   }
 
@@ -511,6 +694,261 @@ class _VendasPageState extends State<VendasPage> {
             normalized.contains('sem estoque'));
   }
 }
+
+// ─── Confirmation bottom sheet ───────────────────────────────────────────────
+
+class _ConfirmacaoSheet extends StatefulWidget {
+  final Venda venda;
+  final VendasCubit cubit;
+  final void Function(String mensagem) onFinalizado;
+
+  const _ConfirmacaoSheet({
+    required this.venda,
+    required this.cubit,
+    required this.onFinalizado,
+  });
+
+  @override
+  State<_ConfirmacaoSheet> createState() => _ConfirmacaoSheetState();
+}
+
+class _ConfirmacaoSheetState extends State<_ConfirmacaoSheet> {
+  bool _loading = false;
+
+  Future<void> _concluirComValidacao() async {
+    setState(() => _loading = true);
+    final erro = await widget.cubit.verificarEstoqueParaVenda(widget.venda);
+    if (!mounted) return;
+
+    if (erro != null) {
+      setState(() => _loading = false);
+      // ignore: use_build_context_synchronously
+      await showDialog<void>(
+        context: context,
+        builder: (_) => AlertDialog(
+          backgroundColor: const Color(0xFF1B1B1B),
+          title: const Text(
+            'Estoque insuficiente',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Text(erro, style: const TextStyle(color: Color(0xFFCCCCCC))),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Entendido',
+                style: TextStyle(color: Color(0xFFE85D33)),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    await _acao('CONCLUIDA', 'Venda concluida com sucesso.');
+  }
+
+  Future<void> _acao(String status, String mensagem) async {
+    setState(() => _loading = true);
+    final ok = await widget.cubit.atualizarStatus(widget.venda.id, status);
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    if (ok) widget.onFinalizado(mensagem);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final itens = widget.venda.itens;
+    final total = widget.venda.total;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFF2E2E2E),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Confirmar venda',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Revise os itens antes de concluir',
+            style: TextStyle(color: Color(0xFF7C7C7C), fontSize: 12),
+          ),
+          const SizedBox(height: 16),
+          if (itens.isEmpty)
+            Text(
+              widget.venda.produto,
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
+            )
+          else
+            ...itens.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.produto.isNotEmpty
+                                ? item.produto
+                                : 'Produto #${item.receitaId}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Text(
+                                '${_fmtQty(item.quantidade)} × ${_fmtCur(item.precoUnitarioReal)}',
+                                style: const TextStyle(
+                                  color: Color(0xFF858585),
+                                  fontSize: 11.5,
+                                ),
+                              ),
+                              if (item.margemRealizada != null) ...[
+                                const SizedBox(width: 6),
+                                Text(
+                                  '${(item.margemRealizada! * 100).toStringAsFixed(1)}% margem',
+                                  style: const TextStyle(
+                                    color: Color(0xFF4CAF50),
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      _fmtCur(item.quantidade * item.precoUnitarioReal),
+                      style: const TextStyle(
+                        color: Color(0xFFFF6B3D),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          const Divider(color: Color(0xFF1E1E1E)),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Total',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                _fmtCur(total),
+                style: const TextStyle(
+                  color: Color(0xFFFF6B3D),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: _loading ? null : _concluirComValidacao,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF6B3D),
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: const Color(0xFF4A2A21),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _loading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Concluir Venda',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: OutlinedButton(
+              onPressed: _loading
+                  ? null
+                  : () => _acao('CANCELADA', 'Venda cancelada.'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFE53935),
+                side: const BorderSide(color: Color(0xFFE53935)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Cancelar Venda'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _fmtCur(double value) {
+    final parts = value.toStringAsFixed(2).split('.');
+    return 'R\$ ${parts[0]},${parts[1]}';
+  }
+
+  static String _fmtQty(double value) {
+    if (value % 1 == 0) return value.toStringAsFixed(0);
+    return value.toStringAsFixed(2).replaceAll('.', ',');
+  }
+}
+
+// ─── Date filter button ───────────────────────────────────────────────────────
 
 class _DateFilterButton extends StatelessWidget {
   final String label;

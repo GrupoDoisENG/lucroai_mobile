@@ -43,6 +43,9 @@ dependencies:
   # Dependency injection
   get_it: ^8.0.3
 
+  # Local storage
+  shared_preferences: ^2.3.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

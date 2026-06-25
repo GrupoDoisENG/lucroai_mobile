@@ -6,6 +6,8 @@ import '../../../custos/presentation/pages/custos_page.dart';
 import '../../../dashboard/presentation/pages/dashboard_page.dart';
 import '../../../estoques/presentation/cubit/estoques_cubit.dart';
 import '../../../estoques/presentation/pages/estoques_page.dart';
+import '../../../producoes/presentation/cubit/producoes_cubit.dart';
+import '../../../producoes/presentation/pages/producoes_page.dart';
 import '../../../receitas/presentation/cubit/receitas_cubit.dart';
 import '../../../receitas/presentation/pages/receitas_page.dart';
 import '../../../simulacao/presentation/pages/simulacao_page.dart';
@@ -50,6 +52,10 @@ class _AppShellPageState extends State<AppShellPage> {
     BlocProvider(
       create: (_) => sl<EstoquesCubit>(),
       child: const EstoquesPage(),
+    ),
+    BlocProvider(
+      create: (_) => sl<ProducoesCubit>(),
+      child: const ProducoesPage(),
     ),
     MultiBlocProvider(
       providers: [

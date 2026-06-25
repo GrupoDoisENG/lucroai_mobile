@@ -3,6 +3,20 @@ import '../../domain/entities/venda.dart';
 
 enum VendasStatus { initial, loading, success, error }
 
+class ItemCarrinho {
+  final Receita receita;
+  final double quantidade;
+  final double precoUnitario;
+
+  const ItemCarrinho({
+    required this.receita,
+    required this.quantidade,
+    required this.precoUnitario,
+  });
+
+  double get subtotal => quantidade * precoUnitario;
+}
+
 class VendasState {
   final VendasStatus status;
   final List<Venda> vendas;

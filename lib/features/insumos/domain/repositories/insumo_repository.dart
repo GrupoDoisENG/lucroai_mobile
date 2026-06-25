@@ -6,7 +6,6 @@ abstract class InsumoRepository {
   Future<Insumo> getInsumo(int id);
 
   Future<Insumo> createInsumo({
-    required int empresaId,
     required String nome,
     required double quantidade,
     required InsumoUnidadeMedida unidade,

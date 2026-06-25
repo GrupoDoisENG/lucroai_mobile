@@ -1,5 +1,6 @@
 import '../../../insumos/domain/entities/insumo.dart';
 import '../../domain/entities/receita.dart';
+import '../../domain/entities/simulacao_result.dart';
 import '../../domain/repositories/receita_repository.dart';
 import '../datasources/receita_remote_datasource.dart';
 import '../models/receita_model.dart';
@@ -19,27 +20,26 @@ class ReceitaRepositoryImpl implements ReceitaRepository {
 
   @override
   Future<Receita> createReceita({
-    required int empresaId,
     required String nome,
     required double rendimento,
     required InsumoUnidadeMedida unidadeRendimento,
-    required double custoProducao,
-    required double custoUnitario,
-    required double margemLucro,
-    required double precoSugerido,
-    List<ReceitaItem> itens = const [],
+    double? margemLucro,
+    List<ReceitaItemInput> insumos = const [],
   }) {
     return datasource.createReceita(
       ReceitaModel.toJsonCreate(
-        empresaId: empresaId,
         nome: nome,
         rendimento: rendimento,
         unidadeRendimento: unidadeRendimento,
-        custoProducao: custoProducao,
-        custoUnitario: custoUnitario,
         margemLucro: margemLucro,
-        precoSugerido: precoSugerido,
-        itens: itens,
+        insumos: insumos
+            .map(
+              (i) => ReceitaItemModel(
+                insumoId: i.insumoId,
+                quantidade: i.quantidade,
+              ),
+            )
+            .toList(),
       ),
     );
   }
@@ -50,11 +50,8 @@ class ReceitaRepositoryImpl implements ReceitaRepository {
     String? nome,
     double? rendimento,
     InsumoUnidadeMedida? unidadeRendimento,
-    double? custoProducao,
-    double? custoUnitario,
     double? margemLucro,
-    double? precoSugerido,
-    List<ReceitaItem>? itens,
+    List<ReceitaItemInput>? insumos,
   }) {
     return datasource.updateReceita(
       id,
@@ -62,15 +59,33 @@ class ReceitaRepositoryImpl implements ReceitaRepository {
         nome: nome,
         rendimento: rendimento,
         unidadeRendimento: unidadeRendimento,
-        custoProducao: custoProducao,
-        custoUnitario: custoUnitario,
         margemLucro: margemLucro,
-        precoSugerido: precoSugerido,
-        itens: itens,
+        insumos: insumos
+            ?.map(
+              (i) => ReceitaItemModel(
+                insumoId: i.insumoId,
+                quantidade: i.quantidade,
+              ),
+            )
+            .toList(),
       ),
     );
   }
 
   @override
   Future<void> deleteReceita(int id) => datasource.deleteReceita(id);
+
+  @override
+  Future<SimulacaoResult> simularReceita({
+    required int id,
+    double? novoCusto,
+    double? novoPreco,
+    int? volume,
+  }) {
+    return datasource.simularReceita(id, {
+      if (novoCusto != null) 'novoCusto': novoCusto,
+      if (novoPreco != null) 'novoPreco': novoPreco,
+      if (volume != null) 'volume': volume,
+    });
+  }
 }

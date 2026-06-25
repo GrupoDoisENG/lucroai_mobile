@@ -1,5 +1,6 @@
 import '../../../insumos/domain/entities/insumo.dart';
 import '../entities/receita.dart';
+import '../entities/simulacao_result.dart';
 
 abstract class ReceitaRepository {
   Future<List<Receita>> getReceitas({String? search});
@@ -7,15 +8,11 @@ abstract class ReceitaRepository {
   Future<Receita> getReceita(int id);
 
   Future<Receita> createReceita({
-    required int empresaId,
     required String nome,
     required double rendimento,
     required InsumoUnidadeMedida unidadeRendimento,
-    required double custoProducao,
-    required double custoUnitario,
-    required double margemLucro,
-    required double precoSugerido,
-    List<ReceitaItem> itens = const [],
+    double? margemLucro,
+    List<ReceitaItemInput> insumos = const [],
   });
 
   Future<Receita> updateReceita({
@@ -23,12 +20,16 @@ abstract class ReceitaRepository {
     String? nome,
     double? rendimento,
     InsumoUnidadeMedida? unidadeRendimento,
-    double? custoProducao,
-    double? custoUnitario,
     double? margemLucro,
-    double? precoSugerido,
-    List<ReceitaItem>? itens,
+    List<ReceitaItemInput>? insumos,
   });
 
   Future<void> deleteReceita(int id);
+
+  Future<SimulacaoResult> simularReceita({
+    required int id,
+    double? novoCusto,
+    double? novoPreco,
+    int? volume,
+  });
 }

@@ -7,6 +7,8 @@ class VendaItemModel extends VendaItem {
     required super.quantidade,
     required super.precoUnitarioReal,
     required super.total,
+    super.custoUnitario,
+    super.margemRealizada,
   });
 
   factory VendaItemModel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +26,12 @@ class VendaItemModel extends VendaItem {
       total: _toDouble(json['total'] ?? json['valor_total']) == 0
           ? quantidade * preco
           : _toDouble(json['total'] ?? json['valor_total']),
+      custoUnitario: json['custoUnitario'] != null
+          ? _toDouble(json['custoUnitario'])
+          : null,
+      margemRealizada: json['margemRealizada'] != null
+          ? _toDouble(json['margemRealizada'])
+          : null,
     );
   }
 
@@ -78,27 +86,22 @@ class VendaModel extends Venda {
 }
 
 class CreateVendaRequestModel extends CreateVendaRequest {
-  const CreateVendaRequestModel({
-    required super.empresaId,
-    required super.itens,
-  });
+  const CreateVendaRequestModel({required super.itens});
 
   factory CreateVendaRequestModel.fromEntity(CreateVendaRequest request) {
-    return CreateVendaRequestModel(
-      empresaId: request.empresaId,
-      itens: request.itens,
-    );
+    return CreateVendaRequestModel(itens: request.itens);
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'empresa_id': empresaId,
       'itens': itens
           .map(
             (item) => {
               'receita_id': item.receitaId,
               'quantidade': item.quantidade,
-              'preco_unitario_real': item.precoUnitarioReal,
+              'preco_unitario_real': double.parse(
+                item.precoUnitarioReal.toStringAsFixed(2),
+              ),
             },
           )
           .toList(),

@@ -14,6 +14,8 @@ abstract class VendaRemoteDatasource {
     DateTime? dataInicio,
     DateTime? dataFim,
   });
+
+  Future<VendaModel> atualizarStatus(int id, String status);
 }
 
 class VendaRemoteDatasourceImpl implements VendaRemoteDatasource {
@@ -135,6 +137,19 @@ class VendaRemoteDatasourceImpl implements VendaRemoteDatasource {
       message: message,
       statusCode: e.response?.statusCode,
     );
+  }
+
+  @override
+  Future<VendaModel> atualizarStatus(int id, String status) async {
+    try {
+      final response = await dio.patch(
+        ApiConstants.vendaStatus(id),
+        data: {'status': status},
+      );
+      return VendaModel.fromJson(_extractVendaMap(response.data));
+    } on DioException catch (e) {
+      throw _buildException(e);
+    }
   }
 
   String _formatDate(DateTime value) {

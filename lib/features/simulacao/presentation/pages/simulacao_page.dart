@@ -240,15 +240,13 @@ class _SimulacaoPageState extends State<SimulacaoPage> {
   }
 
   _Range _priceRangeFor(Receita receita) {
-    final basePrice = receita.precoSugerido > 0
-        ? receita.precoSugerido
-        : receita.custoUnitario * (1 + receita.margemLucro);
-    final safeBase = math.max(basePrice, receita.custoUnitario * 1.25);
-    final min = math.max(
-      0.01,
-      math.min(receita.custoUnitario * 0.75, safeBase),
-    );
-    final max = math.max(safeBase * 2.2, receita.custoUnitario * 3);
+    final custo = receita.custoUnitario ?? 0;
+    final basePrice = (receita.precoSugerido ?? 0) > 0
+        ? receita.precoSugerido!
+        : custo * (1 + (receita.margemLucro ?? 0));
+    final safeBase = math.max(basePrice, custo * 1.25);
+    final min = math.max(0.01, math.min(custo * 0.75, safeBase));
+    final max = math.max(safeBase * 2.2, custo * 3);
     return _Range(min, max);
   }
 
@@ -318,20 +316,20 @@ class _ScenarioBase {
       }
     }
 
-    final suggestedPrice = receita.precoSugerido > 0
-        ? receita.precoSugerido
-        : receita.custoUnitario * (1 + receita.margemLucro);
+    final custo = receita.custoUnitario ?? 0;
+    final suggestedPrice = (receita.precoSugerido ?? 0) > 0
+        ? receita.precoSugerido!
+        : custo * (1 + (receita.margemLucro ?? 0));
     final currentPrice = quantity > 0 ? revenue / quantity : suggestedPrice;
     final fallbackVolume = math.max(1.0, receita.rendimento);
     final currentRevenue = quantity > 0
         ? revenue
         : currentPrice * fallbackVolume;
     final actualVolume = quantity > 0 ? quantity : fallbackVolume;
-    final actualProfit =
-        currentRevenue - (receita.custoUnitario * actualVolume);
+    final actualProfit = currentRevenue - (custo * actualVolume);
 
     return _ScenarioBase(
-      unitCost: receita.custoUnitario,
+      unitCost: custo,
       currentPrice: currentPrice,
       currentRevenue: currentRevenue,
       actualVolume: actualVolume,
